@@ -1,0 +1,10 @@
+{
+    "senha_email": "inova*@78#q)hRj)p-071",
+    "banco_dados": {
+        "servidor": "192.168.102.195",
+        "porta": "1433",
+        "banco": "TESTE_PJBANK",
+        "usuario": "sa",
+        "senha": "sgn123"
+    }
+}
