@@ -1,24 +1,19 @@
-// const sql = require('mssql');
+const chaves = require('../../chaves.json');
 
-// try{
-   
-//     await sql.connect(`Server=${chaves.banco_dados.servidor},${chaves.banco_dados.porta};Database=${chaves.banco_dados.banco};User Id=${chaves.banco_dados.usuario};Password=${chaves.banco_dados.senha};Encrypt=false`);
+const sqlConfig = {
+    user: chaves.banco_dados.usuario,
+    password: chaves.banco_dados.senha,
+    database: chaves.banco_dados.banco,
+    server: chaves.banco_dados.servidor,
+    pool: {
+      max: 10,
+      min: 0,
+      idleTimeoutMillis: 30000
+    },
+    options: {
+      encrypt: false, // for azure
+      trustServerCertificate: false // change to true for local dev / self-signed certs
+    }
+  }
 
-// } catch (err) {
-
-//     console.log(err);
-
-// }
-
-// module.exports = sql;
-// const chaves = require('../../chaves.json');
-// const sql = require('mssql');
-
-// (async () => {
-
-//     await sql.connect(`Server=${chaves.banco_dados.servidor},${chaves.banco_dados.porta};Database=${chaves.banco_dados.banco};User Id=${chaves.banco_dados.usuario};Password=${chaves.banco_dados.senha};Encrypt=false`);
-
-// })();
-
-
-// module.exports = {sql};
+  module.exports = {sqlConfig};

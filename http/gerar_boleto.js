@@ -161,26 +161,21 @@ function impressaoBoletosLote(){
             });
 }
 
-function invalidarBoleto(credencial, chave, id_unico){
+function invalidarBoleto(credencial, chave, pedido_numero){
 
             var data = '';
 
             var config = {
             method: 'delete',
-            url: `https://sandbox.pjbank.com.br/contadigital/${credencial}/recebimentos/transacoes/${id_unico}`,
+            url: `https://sandbox.pjbank.com.br/contadigital/${credencial}/recebimentos/transacoes/${pedido_numero}`,
             headers: { 
                 'X-CHAVE-CONTA': `${chave}`
             },
             data : data
             };
 
-            return axios(config)
-            // .then(function (response) {
-            //     console.log(JSON.stringify(response.data));
-            // })
-            // .catch(function (error) {
-            //     console.log(error);
-            // });
+            return axios(config);
+           
 }
 
 
@@ -203,16 +198,7 @@ function consultaPagamentoBoleto(credencial, chave, id_unico){
             };
 
             return axios(config);
-            // .then(async function (response) {
-            // // await console.log(JSON.stringify(response.data));
-            // // console.log(response.data);
-            // // let result = await response.data;
-            // //  return result;
-            // console.log(response.data);
-            // })
-            // .catch(function (error) {
-            // console.log(error);
-            // });
+            
 }
 
 module.exports = {gerarBoletoSemPjbank,gerarBoletoContaPjbank, impressaoBoletosLote, invalidarBoleto, consultaPagamentoBoleto};
