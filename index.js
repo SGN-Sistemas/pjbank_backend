@@ -6,6 +6,8 @@ app.use(cors('*'));
 app.use(bodyParser.json());
 
 app.use('/', require('./src/route/boletoRoute'));
+app.use('/', require('./src/route/contaDigitalRoute'));
+app.use('/', require('./src/route/webHookRouter'));
  
 app.listen(7000, () => {
  

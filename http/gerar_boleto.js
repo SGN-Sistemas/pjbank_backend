@@ -130,35 +130,30 @@ function gerarBoletoSemPjbank(){
     });
 }
 
-function impressaoBoletosLote(){
+function impressaoBoletosLote(credencial, chave, numeros_pedidos){
 
             var data = JSON.stringify({
-            "pedido_numero": [
-                "2",
-                "3",
-                "4"
-                
-            ]
+                "pedido_numero": [...numeros_pedidos]
                 
             });
 
             var config = {
             method: 'post',
-            url: 'https://sandbox.pjbank.com.br/contadigital/f81254c1324447552e77dd306201c1f3c723e1c0/recebimentos/transacoes/lotes',
+            url: `https://sandbox.pjbank.com.br/contadigital/${credencial}/recebimentos/transacoes/lotes`,
             headers: { 
                 'Content-Type': 'application/json', 
-                'X-CHAVE-CONTA': 'e0bdd68a9fe7047367d9cc693e5e2482886a6549'
+                'X-CHAVE-CONTA': `${chave}`
             },
             data : data
             };
 
-            axios(config)
-            .then(function (response) {
-            console.log(JSON.stringify(response.data));
-            })
-            .catch(function (error) {
-            console.log(error);
-            });
+            return axios(config);
+            // .then(function (response) {
+            // console.log(JSON.stringify(response.data));
+            // })
+            // .catch(function (error) {
+            // console.log(error);
+            // });
 }
 
 function invalidarBoleto(credencial, chave, pedido_numero){

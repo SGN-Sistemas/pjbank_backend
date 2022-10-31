@@ -1,31 +1,147 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+const sql = require('mssql');
+const configBanco = require('../db/config_conexao');
 
-const select = () => {
-    return 'SELECT * FROM BOLETO_COBRANCA_PJBANK'
+
+const selectCredencialEmpresa = async (empresa) => {
+
+  try {
+
+    await sql.connect(configBanco.sqlConfig);
+    const result = await sql.query`SELECT
+                                                CPEM_CREDENCIAL,
+                                                CPEM_URL_WEBHOOK,
+                                                CPEM_URL_LOGO,
+                                                CPEM_CHAVE
+                                        FROM
+                                                CREDENCIAL_PJBANK_EMPRESA
+                                        WHERE
+                                                CPEM_EMPR_COD = ${empresa}`;
+    return result;
+
+  } catch (err) {
+    console.log(err);
+    return err;
   }
-  
-  const selectBoletoCConta = (parcela) => {
-    return "SELECT RECP_COD,TRPR_DTVENC AS DATA_VENCIMENTO,TRPR_VALOR_BOLETO AS VALOR_BOLETO,COBR_JUROS AS JUROS,COBR_MULTA AS MULTA, TRPR_VALDESC_PONTUALIDADE AS DESCONTO,CLIE_NOME AS CLIENTE_NOME,PEFI_CPF AS CPFASCNPJ,PEFI_END_COBR AS ENDERECO,PEFI_BAIRRO_COBR AS BAIRRO,PEFI_CIDADE_COBR AS CIDADE,PEFI_UNFE_SIGLA_COBR AS UF, PEFI_CEP_COBR AS CEP, CONCAT(COBR_MENSAGEM,' \n', COBR_MENSAGEM2, '\n', COBR_INSTRUCAO1,'\n', COBR_INSTRUCAO2) AS MENSAGEM, RECP_TIPO_COD,CPEM_CREDENCIAL AS CREDENCIAL FROM COBRANCA INNER JOIN REL_COBRANCA_PARCELAS ON RECP_COBR_COD = COBR_COD INNER JOIN SUB_CONTA_CORRENTE ON COBR_SUCC_COD = SUCC_COD INNER JOIN  TR_PARCELA_RC ON TRPR_COD = RECP_TIPO_COD INNER JOIN  TRANSACAO_RC ON TRRC_COD = TRPR_TRRC_COD INNER JOIN CLIENTE ON CLIE_COD = TRRC_CLIE_COD INNER JOIN PESSOA_FISICA ON PEFI_COD = CLIE_TIPO_COD INNER JOIN EMPRESA ON EMPR_COD = TRRC_EMPR_COD INNER JOIN CREDENCIAL_PJBANK_EMPRESA ON  CPEM_EMPR_COD = EMPR_COD WHERE RECP_TIPO = 'RC' AND CLIE_TIPO = 'F' AND RECP_TIPO_COD IN (" + parcela + ") UNION SELECT RECP_COD, TRPR_DTVENC AS DATA_VENCIMENTO,TRPR_VALOR_BOLETO AS VALOR_BOLETO ,COBR_JUROS AS JUROS,COBR_MULTA AS MULTA, TRPR_VALDESC_PONTUALIDADE AS DESCONTO,CLIE_NOME AS CLIENTE_NOME,PEJU_CGC AS CPFASCNPJ,PEJU_END_COBR AS ENDERECO,PEJU_BAIRRO_COBR AS BAIRRO,PEJU_CIDADE_COBR AS CIDADE,PEJU_UNFE_SIGLA_COBR AS UF, PEJU_CEP_COBR AS CEP, CONCAT(COBR_MENSAGEM,' \n', COBR_MENSAGEM2, '\n', COBR_INSTRUCAO1,'\n', COBR_INSTRUCAO2) AS MENSAGEM, RECP_TIPO_COD,CPEM_CREDENCIAL AS CREDENCIAL FROM COBRANCA INNER JOIN  REL_COBRANCA_PARCELAS ON RECP_COBR_COD = COBR_COD INNER JOIN SUB_CONTA_CORRENTE ON COBR_SUCC_COD = SUCC_COD INNER JOIN  TR_PARCELA_RC ON TRPR_COD = RECP_TIPO_COD INNER JOIN  TRANSACAO_RC ON TRRC_COD = TRPR_TRRC_COD INNER JOIN CLIENTE ON CLIE_COD = TRRC_CLIE_COD INNER JOIN PESSOA_JURIDICA ON PEJU_COD = CLIE_TIPO_COD INNER JOIN EMPRESA ON EMPR_COD = TRRC_EMPR_COD INNER JOIN CREDENCIAL_PJBANK_EMPRESA ON  CPEM_EMPR_COD = EMPR_COD WHERE RECP_TIPO = 'RC' AND CLIE_TIPO = 'J' AND RECP_TIPO_COD IN (" + parcela + ')'
+}
+
+const dadosCobrancaTrParcelaRc = async (codigos) => {
+
+  try {
+
+    await sql.connect(configBanco.sqlConfig);
+
+    const result = await sql.query`SELECT
+                                          TRRC_EMPR_COD,
+                                          TRRC_CLIE_COD,
+                                          TRPR_COD,
+                                          TRPR_DTVENC,
+                                          TRPR_VALPREV,
+                                          TRPR_VALJUR,
+                                          TRPR_VALMULTA,
+                                          TRPR_VALDESC,
+                                          CLIE_TIPO_COD
+                                    FROM
+                                          TR_PARCELA_RC
+                                    INNER JOIN
+                                          TRANSACAO_RC
+                                    ON
+                                          TR_PARCELA_RC.TRPR_TRRC_COD = TRANSACAO_RC.TRRC_COD
+                                    INNER JOIN
+                                          CLIENTE
+                                    ON
+                                          TRANSACAO_RC.TRRC_CLIE_COD = CLIENTE.CLIE_COD
+                                    WHERE
+                                          TRPR_COD IN (${codigos})`;
+    return result;
+
+  } catch (err) {
+    console.log(err);
+    return err;
   }
-  
-  const selectDadosCriarConta = (codigo) => {
-    return 'SELECT EMPR_NOME AS NOME, EMPR_COD AS CODIGO, EMPR_FONE AS TELEFONE, EMPR_END AS ENDERECO,EMPR_CEP AS CEP, EMPR_BAIRRO AS BAIRRO, EMPR_CIDADE AS CIDADE,EMPR_UNFE_SIGLA AS UF, EMPR_EMAIL AS EMAIL, EMPR_CGC AS CNPJ FROM EMPRESA WHERE EMPR_COD = ' + codigo
+}
+
+const dadosCliente = async (cliente_cod) => {
+
+  try {
+
+    await sql.connect(configBanco.sqlConfig);
+
+    const result = await sql.query`SELECT
+                                        CLIE_COD,
+                                        CLIE_NOME,
+                                        PEFI_CPF,
+                                        PEFI_UNFE_SIGLA,
+                                        PEFI_CIDADE,
+                                        PEFI_END,
+                                        PEFI_BAIRRO,
+                                        PEFI_CEP,
+                                        CLIE_TIPO
+                                    FROM
+                                        CLIENTE
+                                    INNER JOIN
+                                        PESSOA_FISICA
+                                    ON
+                                        PEFI_COD = CLIE_TIPO_COD
+                                    WHERE
+                                        CLIE_TIPO_COD = ${cliente_cod}
+
+                                    UNION
+
+                                    SELECT
+                                        CLIE_COD,
+                                        CLIE_NOME,
+                                        PEJU_CGC,
+                                        PEJU_UNFE_SIGLA_COBR,
+                                        PEJU_CIDADE,
+                                        PEJU_END,
+                                        PEJU_BAIRRO,
+                                        PEJU_CEP_COBR,
+                                        CLIE_TIPO
+                                    FROM
+                                        CLIENTE
+                                    INNER JOIN
+                                        PESSOA_JURIDICA
+                                    ON
+                                        PEJU_COD = CLIE_TIPO_COD
+                                    WHERE
+                                        CLIE_TIPO_COD = ${cliente_cod}`;
+    return result;
+
+  } catch (err) {
+    console.log(err);
+    return err;
   }
-  
-  const insertCredenciais = (credencial, chave, webhookChave, urlWebhook, emprCod) => {
-    return `INSERT INTO CREDENCIAL_PJBANK_EMPRESA (CPEM_EMPR_COD,CPEM_CREDENCIAL,CPEM_CHAVE,CPEM_WEBHOOK_CHAVE,CPEM_URL_WEBHOOK) VALUES (${emprCod},'${credencial}','${chave}','${webhookChave}','${urlWebhook}')`
+}
+
+const getBoletoCobrancaPjBank = async (pedido_numero) => {
+
+  try {
+
+    await sql.connect(configBanco.sqlConfig);
+
+    const result = await sql.query`SELECT 
+                                      BCPJ_COD,
+                                      BCPJ_RECP_COD,
+                                      BCPJ_ID_UNICO,
+                                      BCPJ_PEDIDO_NUMERO,
+                                      BCPJ_NOSSO_NUMERO
+                                  FROM
+                                      BOLETO_COBRANCA_PJBANK
+                                  WHERE
+                                      BCPJ_PEDIDO_NUMERO IN (${pedido_numero})`;
+    return result;
+
+  } catch (err) {
+    console.log(err);
+    return err;
   }
+}
+
+module.exports = { 
   
-  const insertBoleto = (BCPJ_RECP_COD, BCPJ_ID_UNICO, BCPJ_TOKEN_FACILITADOR, BCPJ_PEDIDO_NUMERO, BCPJ_LINHA_DIGITAVEL, BCPJ_STATUS, BCPJ_MSG, BCPJ_LINK_BOLETO) => {
-    return `INSERT BOLETO_COBRANCA_PJBANK ( BCPJ_RECP_COD, BCPJ_ID_UNICO, BCPJ_TOKEN_FACILITADOR, BCPJ_PEDIDO_NUMERO, BCPJ_LINHA_DIGITAVEL, BCPJ_STATUS, BCPJ_MSG, BCPJ_LINK_BOLETO ) VALUES ( ${BCPJ_RECP_COD}, '${BCPJ_ID_UNICO}', '${BCPJ_TOKEN_FACILITADOR}', '${BCPJ_PEDIDO_NUMERO}', '${BCPJ_LINHA_DIGITAVEL}', '${BCPJ_STATUS}', '${BCPJ_MSG}','${BCPJ_LINK_BOLETO}')`
-  }
-  
-  
-  export {
-    select,
-    selectBoletoCConta,
-    selectDadosCriarConta,
-    insertCredenciais,
-    insertBoleto
-  }
-  
+   selectCredencialEmpresa,
+   dadosCobrancaTrParcelaRc, 
+   dadosCliente, 
+   getBoletoCobrancaPjBank
+
+};

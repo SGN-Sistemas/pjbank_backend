@@ -4,16 +4,14 @@ const nodemailer = require('nodemailer');
 const sql = require('mssql');
 
 const boletos = require('../../http/gerar_boleto');
-const chaves = require('../../chaves.json');
 const datas = require('../../src/datas_formatadas');
 const smtp = require('../../src/smtp/config_smtp');
 const email = require('../../src/smtp/enviar_email');
 const operacoes_boletos = require('../../http/gerar_boleto');
-const conta = require('../../http/admin_conta_digital');
+const config_conexao = require('../db/config_conexao');
+const querys = require('../query/index');
 
 const router = express.Router();
- 
-let dados_boleto = [];
  
 let array_parcelas = [];
  
@@ -32,31 +30,8 @@ router.post('/boleto', (req, res) => {
            console.log(codigos)
  
            try {
- 
-                 await sql.connect(`Server=${chaves.banco_dados.servidor},${chaves.banco_dados.porta};Database=${chaves.banco_dados.banco};User Id=${chaves.banco_dados.usuario};Password=${chaves.banco_dados.senha};Encrypt=false`);
- 
-                 const dados_cobranca = await sql.query`SELECT
-                                                     TRRC_EMPR_COD,
-                                                     TRRC_CLIE_COD,
-                                                     TRPR_COD,
-                                                     TRPR_DTVENC,
-                                                     TRPR_VALPREV,
-                                                     TRPR_VALJUR,
-                                                     TRPR_VALMULTA,
-                                                     TRPR_VALDESC,
-                                                     CLIE_TIPO_COD
-                                               FROM
-                                                     TR_PARCELA_RC
-                                               INNER JOIN
-                                                     TRANSACAO_RC
-                                               ON
-                                                     TR_PARCELA_RC.TRPR_TRRC_COD = TRANSACAO_RC.TRRC_COD
-                                               INNER JOIN
-                                                     CLIENTE
-                                               ON
-                                                     TRANSACAO_RC.TRRC_CLIE_COD = CLIENTE.CLIE_COD
-                                               WHERE
-                                                     TRPR_COD IN (${codigos})`;
+
+                 const dados_cobranca = await querys.dadosCobrancaTrParcelaRc(codigos);
  
                  console.log("Dados da cobrança!")
  
@@ -64,36 +39,14 @@ router.post('/boleto', (req, res) => {
  
                  let cliente_cod = dados_cobranca.recordset[0].CLIE_TIPO_COD;
                  let empresa_cod = dados_cobranca.recordset[0].TRRC_EMPR_COD;
- 
- 
-                 const result_empresa = await sql.query`SELECT
-                                                            CPEM_CREDENCIAL,
-                                                            CPEM_URL_WEBHOOK,
-                                                            CPEM_URL_LOGO
-                                                        FROM
-                                                            CREDENCIAL_PJBANK_EMPRESA
-                                                        WHERE
-                                                            CPEM_EMPR_COD = ${empresa_cod}`;
+
+                 const result_empresa = await querys.selectCredencialEmpresa(empresa_cod);
  
                  console.log(result_empresa.recordset[0].CPEM_CREDENCIAL);
  
                  let credencial = result_empresa.recordset[0].CPEM_CREDENCIAL;
                  let url_webhook = result_empresa.recordset[0].CPEM_URL_WEBHOOK;
                  let url_logo = result_empresa.recordset[0].CPEM_URL_LOGO;
- 
-                 const result = await sql.query`SELECT
-                                                      TRPR_COD,
-                                                      TRPR_DTVENC,
-                                                      TRPR_VALPREV,
-                                                      TRPR_VALJUR,
-                                                      TRPR_VALMULTA,
-                                                      TRPR_VALDESC
-                                                FROM
-                                                      TR_PARCELA_RC
-                                                WHERE
-                                                      TRPR_COD IN (${codigos})`;
-
-                 console.log(result.recordset);
  
                  const exists_boletos = await sql.query`SELECT
                                                                   BCPJ_COD
@@ -102,60 +55,12 @@ router.post('/boleto', (req, res) => {
                                                             WHERE
                                                                   BCPJ_PEDIDO_NUMERO IN (${codigos})`;
                  console.log(exists_boletos);
-                 console.log('Numeros de boletos gerados\n');
-                 console.log(exists_boletos.rowsAffected[0]);
  
                  dados_parcela = [...dados_cobranca.recordset];
- 
-                 const result_cliente = await sql.query`SELECT
-                                                   CLIE_COD,
-                                                   CLIE_NOME,
-                                                   PEFI_CPF,
-                                                   PEFI_UNFE_SIGLA,
-                                                   PEFI_CIDADE,
-                                                   PEFI_END,
-                                                   PEFI_BAIRRO,
-                                                   PEFI_CEP,
-                                                   CLIE_TIPO
-                                               FROM
-                                                   CLIENTE
-                                             INNER JOIN
-                                                   PESSOA_FISICA
-                                             ON
-                                                   PEFI_COD = CLIE_TIPO_COD
-                                             WHERE
-                                                   CLIE_TIPO_COD = ${cliente_cod}
-                                            
-                                             UNION
-                                          
-                                             SELECT
-                                                   CLIE_COD,
-                                                   CLIE_NOME,
-                                                   PEJU_CGC,
-                                                   PEJU_UNFE_SIGLA_COBR,
-                                                   PEJU_CIDADE,
-                                                   PEJU_END,
-                                                   PEJU_BAIRRO,
-                                                   PEJU_CEP_COBR,
-                                                   CLIE_TIPO
-                                             FROM
-                                                   CLIENTE
-                                             INNER JOIN
-                                                   PESSOA_JURIDICA
-                                             ON
-                                                   PEJU_COD = CLIE_TIPO_COD
-                                             WHERE
-                                                   CLIE_TIPO_COD = ${cliente_cod}`;
- 
-                 console.log(result_cliente);
+
+                 const result_cliente = await querys.dadosCliente(cliente_cod);
  
                  let cliente = result_cliente.recordset[0];
- 
-                 console.log('Quantidade de registros!')
- 
-                 console.log('Cliente: ' + cliente.CLIE_NOME)
- 
-                 console.log(result_cliente.recordset.length);
  
                  let nome_cliente;
                  let cpf_cliente;
@@ -264,14 +169,10 @@ router.post('/boleto', (req, res) => {
  
                                    let dados = null;
  
-                                   //console.log(JSON.stringify(response.data));
                                    if (response.data) {
  
                                          dados = response.data;
-                                         console.log('dados para o banco')
-                                         console.log(dados)
- 
-                                         console.log("data: " + response)
+
                                          obj_result.mensagem = "Boletos gerados com sucesso";
  
                                          let contador = 0;
@@ -292,6 +193,7 @@ router.post('/boleto', (req, res) => {
                                                acumulador += "Boleto " + n + ": " + atual.link + '\n';
                                                n++;
                                                return acumulador;
+
                                          }, '');
  
                                          console.log(links_boletos);
@@ -385,53 +287,89 @@ router.get('/boleto', (req, res) => {
 
       let pedido_numero = req.query.pedido;
       let empresa_cod = req.query.empresa;
-      console.log('aqui')
-      console.log(pedido_numero);
-      console.log(empresa_cod);
 
       (async () => {
 
-            await sql.connect(`Server=${chaves.banco_dados.servidor},${chaves.banco_dados.porta};Database=${chaves.banco_dados.banco};User Id=${chaves.banco_dados.usuario};Password=${chaves.banco_dados.senha};Encrypt=false`);
+            await sql.connect(config_conexao.sqlConfig);
 
-            const result_empresa = await sql.query`SELECT
-                                                            CPEM_CREDENCIAL,
-                                                            CPEM_URL_WEBHOOK,
-                                                            CPEM_URL_LOGO,
-                                                            CPEM_CHAVE
-                                                      FROM
-                                                            CREDENCIAL_PJBANK_EMPRESA
-                                                      WHERE
-                                                            CPEM_EMPR_COD = ${empresa_cod}`;
+            const result_empresa = await querys.selectCredencialEmpresa(empresa_cod);
 
-            console.log(result_empresa.recordset[0].CPEM_CREDENCIAL);
+            if(result_empresa.rowsAffected > 0){
 
-            let credencial = result_empresa.recordset[0].CPEM_CREDENCIAL;
-            let url_webhook = result_empresa.recordset[0].CPEM_URL_WEBHOOK;
-            let url_logo = result_empresa.recordset[0].CPEM_URL_LOGO;
-            let chave = result_empresa.recordset[0].CPEM_CHAVE;
+                        let credencial = result_empresa.recordset[0].CPEM_CREDENCIAL;
+                        let chave = result_empresa.recordset[0].CPEM_CHAVE;
+                        const result_id_unico = await querys.getBoletoCobrancaPjBank(pedido_numero);
 
-            const result_id_unico = await sql.query`SELECT
-                                                            BCPJ_ID_UNICO
-                                                   FROM
-                                                            BOLETO_COBRANCA_PJBANK
-                                                   WHERE
-                                                            BCPJ_PEDIDO_NUMERO = (${pedido_numero})`;
+                        console.log(result_id_unico)
 
-            let id_unico = result_id_unico.recordset[0].BCPJ_ID_UNICO;
+                        if(result_id_unico.rowsAffected > 0){
 
-            console.log(id_unico);
+                              let id_unico = result_id_unico.recordset[0].BCPJ_ID_UNICO;
 
-            operacoes_boletos.consultaPagamentoBoleto(credencial, chave, id_unico)
-            .then(async function (response) {
-          
-                  console.log(response.data);
-                  res.json(response.data);
-            })
-            .catch(function (error) {
-                  console.log(error);
-                  res.json(error);
-            })
+                              operacoes_boletos.consultaPagamentoBoleto(credencial, chave, id_unico)
+                              .then(async function (response) {
+                        
+                                    console.log(response.data);
+                                    res.json(response.data);
+                              })
+                              .catch(function (error) {
+                                    console.log(error);
+                                    res.json(error);
+                              });
 
+                        }else{
+
+                              res.json({erro: "Não foi encontrado o boleto de cobrança para este número de pedido!"});
+                        }
+                        
+            }else{
+                  res.json({erro: "Sem dados das credenciais dessa empresa!"});
+            }
+      })();
+
+});
+
+router.get('/boleto/lote', (req, res) => {
+
+      let pedido_numero = req.query.pedido.split(',');
+      let empresa_cod = req.query.empresa;
+
+      (async () => {
+
+            await sql.connect(config_conexao.sqlConfig);
+
+            const result_empresa = await querys.selectCredencialEmpresa(empresa_cod);
+
+            if(result_empresa.rowsAffected > 0){
+
+                        let credencial = result_empresa.recordset[0].CPEM_CREDENCIAL;
+                        let chave = result_empresa.recordset[0].CPEM_CHAVE;
+                        const dadosCobranca = await querys.getBoletoCobrancaPjBank(pedido_numero);
+
+                        console.log(dadosCobranca);
+
+                        if(dadosCobranca.rowsAffected > 0){
+
+                              let numeros_pedidos = dadosCobranca.recordset.map(item => item.BCPJ_PEDIDO_NUMERO);
+
+                              operacoes_boletos.impressaoBoletosLote(credencial, chave, numeros_pedidos)
+                              .then(function (response) {
+                                    console.log(JSON.stringify(response.data));
+                                    res.json(response.data);
+                              })
+                              .catch(function (error) {
+                                    console.log(error);
+                                    res.json(error);
+                              });
+
+                        }else{
+
+                              res.json({erro: "Não foi encontrado o boleto de cobrança para estes números de pedido!"});
+                        }
+                        
+            }else{
+                  res.json({erro: "Sem dados das credenciais dessa empresa!"});
+            }
       })();
 
 });
@@ -441,86 +379,27 @@ router.delete('/boleto', (req, res) => {
       let pedido_numero = req.query.pedido;
       let empresa_cod = req.query.empresa;
 
-      console.log('entrei no delete');
-
       (async () => {
 
-            await sql.connect(`Server=${chaves.banco_dados.servidor},${chaves.banco_dados.porta};Database=${chaves.banco_dados.banco};User Id=${chaves.banco_dados.usuario};Password=${chaves.banco_dados.senha};Encrypt=false`);
+            await sql.connect(config_conexao.sqlConfig);
 
-            const result_empresa = await sql.query`SELECT
-                                                            CPEM_CREDENCIAL,
-                                                            CPEM_URL_WEBHOOK,
-                                                            CPEM_URL_LOGO,
-                                                            CPEM_CHAVE
-                                                      FROM
-                                                            CREDENCIAL_PJBANK_EMPRESA
-                                                      WHERE
-                                                            CPEM_EMPR_COD = ${empresa_cod}`;
-
-            console.log(result_empresa.recordset[0].CPEM_CREDENCIAL);
+            const result_empresa = await querys.selectCredencialEmpresa(empresa_cod);
 
             let credencial = result_empresa.recordset[0].CPEM_CREDENCIAL;
-            let url_webhook = result_empresa.recordset[0].CPEM_URL_WEBHOOK;
-            let url_logo = result_empresa.recordset[0].CPEM_URL_LOGO;
             let chave = result_empresa.recordset[0].CPEM_CHAVE;
 
-            const result_id_unico = await sql.query`SELECT
-                                                            BCPJ_ID_UNICO
-                                                   FROM
-                                                            BOLETO_COBRANCA_PJBANK
-                                                   WHERE
-                                                            BCPJ_PEDIDO_NUMERO = ${pedido_numero}`;
-
-            let id_unico = result_id_unico.recordset[0].BCPJ_ID_UNICO;
-
-            operacoes_boletos.invalidarBoleto(credencial, chave, pedido_numero)
-            .then(function (response) {
-                  console.log(JSON.stringify(response.data));
-                  res.json(response.data);
-              })
-              .catch(function (error) {
-                  console.log(error);
-                  res.json(error);
-              });
+                  operacoes_boletos.invalidarBoleto(credencial, chave, pedido_numero)
+                  .then(function (response) {
+                        console.log(JSON.stringify(response.data));
+                        res.json(response.data);
+                  })
+                  .catch(function (error) {
+                        console.log(error);
+                        res.json(error);
+                  });
 
       })();
 
-});
-
-router.get('/conta', (req, res) =>{
-
-      let empresa_cod = req.query.empresa;
-
-      (async () => {
-
-            await sql.connect(`Server=${chaves.banco_dados.servidor},${chaves.banco_dados.porta};Database=${chaves.banco_dados.banco};User Id=${chaves.banco_dados.usuario};Password=${chaves.banco_dados.senha};Encrypt=false`);
-
-            const result_empresa = await sql.query`SELECT
-                                                            CPEM_CREDENCIAL,
-                                                            CPEM_URL_WEBHOOK,
-                                                            CPEM_URL_LOGO,
-                                                            CPEM_CHAVE
-                                                      FROM
-                                                            CREDENCIAL_PJBANK_EMPRESA
-                                                      WHERE
-                                                            CPEM_EMPR_COD = ${empresa_cod}`;
-
-            let credencial = result_empresa.recordset[0].CPEM_CREDENCIAL;
-            let url_webhook = result_empresa.recordset[0].CPEM_URL_WEBHOOK;
-            let url_logo = result_empresa.recordset[0].CPEM_URL_LOGO;
-            let chave = result_empresa.recordset[0].CPEM_CHAVE;
-
-            conta.infoContaDigital(credencial, chave)
-            .then(function (response) {
-                  console.log(JSON.stringify(response.data));
-                  res.json(response.data);
-              })
-              .catch(function (error) {
-                  console.log(error);
-                  res.json(error);
-              });
-
-      })()
 });
  
 module.exports = router;
