@@ -148,12 +148,6 @@ function impressaoBoletosLote(credencial, chave, numeros_pedidos){
             };
 
             return axios(config);
-            // .then(function (response) {
-            // console.log(JSON.stringify(response.data));
-            // })
-            // .catch(function (error) {
-            // console.log(error);
-            // });
 }
 
 function invalidarBoleto(credencial, chave, pedido_numero){
@@ -196,4 +190,25 @@ function consultaPagamentoBoleto(credencial, chave, id_unico){
             
 }
 
-module.exports = {gerarBoletoSemPjbank,gerarBoletoContaPjbank, impressaoBoletosLote, invalidarBoleto, consultaPagamentoBoleto};
+function consultaBoletosFiltros(credencial, chave, data_inicio, data_fim, pagina = 1, pago = 0){
+
+    var config = {
+        method: 'get',
+        url: `https://sandbox.pjbank.com.br/recebimentos/${credencial}/transacoes?data_inicio=${data_inicio}&data_fim=${data_fim}&pago=${pago}&pagina=${pagina}`,
+        headers: { 
+            'X-CHAVE': `${chave}`
+        }
+    };
+
+    return axios(config);
+   
+}
+
+module.exports = {
+    gerarBoletoSemPjbank,
+    gerarBoletoContaPjbank,
+    impressaoBoletosLote,
+    invalidarBoleto,
+    consultaPagamentoBoleto,
+    consultaBoletosFiltros
+};

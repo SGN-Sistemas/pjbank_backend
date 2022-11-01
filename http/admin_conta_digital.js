@@ -1,21 +1,21 @@
 var axios = require('axios');
 
-function criarContaDigital(){
+function criarContaDigital(dadosEmpresa){
      
         var data = JSON.stringify({
-            "nome_empresa": "Exemplo Conta Digital",
-            "cnpj": "20867577000102",
-            "cep": "13032525",
-            "endereco": "Rua Joaquim Vilac",
-            "numero": "509",
-            "bairro": "Vila Teixeira",
-            "complemento": "",
-            "cidade": "Campinas",
-            "estado": "SP",
-            "ddd": "19",
-            "telefone": "987652345",
-            "email": "api@pjbank.com.br",
-            "webhook": "http://example.com.br"
+            "nome_empresa": dadosEmpresa.nome_empresa,
+            "cnpj": dadosEmpresa.cnpj,
+            "cep": dadosEmpresa.cep,
+            "endereco": dadosEmpresa.endereco,
+            "numero": dadosEmpresa.numero,
+            "bairro": dadosEmpresa.bairro,
+            "complemento": dadosEmpresa.complemento,
+            "cidade": dadosEmpresa.cidade,
+            "estado": dadosEmpresa.estado,
+            "ddd": dadosEmpresa.ddd,
+            "telefone": dadosEmpresa.telefone,
+            "email": dadosEmpresa.email,
+            "webhook": dadosEmpresa.webhook
         });
 
         var config = {
@@ -27,13 +27,7 @@ function criarContaDigital(){
             data : data
         };
 
-        axios(config)
-        .then(function (response) {
-             console.log(JSON.stringify(response.data));
-        })
-        .catch(function (error) {
-             console.log(error);
-        });
+        return axios(config);
 }
 
 function addPessoaAdminContaDigital(){

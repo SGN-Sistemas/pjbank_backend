@@ -3,7 +3,6 @@ const axios = require('axios');
 const nodemailer = require('nodemailer');
 const sql = require('mssql');
 
-const boletos = require('../../http/gerar_boleto');
 const datas = require('../../src/datas_formatadas');
 const smtp = require('../../src/smtp/config_smtp');
 const email = require('../../src/smtp/enviar_email');
@@ -168,6 +167,8 @@ router.post('/boleto', (req, res) => {
                              .then(async function (response) {
  
                                    let dados = null;
+                                    console.log('teste')
+                                   console.log(response.data)
  
                                    if (response.data) {
  
@@ -178,13 +179,20 @@ router.post('/boleto', (req, res) => {
                                          let contador = 0;
                                          obj_result.boleto = [];
                                          let cont = 1;
+                                          
+                                         if(Array.isArray(response.data)){
 
-                                         response.data.filter(data => data.status != '400').forEach((boleto) => {
-                                               console.log(boleto)
-                                               obj_result.boleto.push({ id: cont, link: boleto.linkBoleto });
-                                               cont++;
- 
-                                         })
+                                                response.data.filter(data => data.status != '400').forEach((boleto) => {
+                                                      console.log(boleto)
+                                                      obj_result.boleto.push({ id: cont, link: boleto.linkBoleto });
+                                                      cont++;
+      
+                                                })
+
+                                         }else{
+                                                obj_result.boleto.push({ id: cont, link: response.data.linkBoleto });
+                                                cont++;
+                                         }
  
                                          let n = 1;
  
@@ -202,57 +210,20 @@ router.post('/boleto', (req, res) => {
  
                                          if (dados) {
  
-                                               console.log(dados)
+                                               console.log(dados);
+                                          
+                                            if(Array.isArray(dados)){
  
                                                dados.forEach(async (dado) => {
  
-                                                     const result_insert = await sql.query(`INSERT INTO
-                                                                         BOLETO_COBRANCA_PJBANK
-                                                                                 (
-                                                                                    
-                                                                                     BCPJ_ID_UNICO,
-                                                                                     BCPJ_ID_UNICO_ORIGINAL,
-                                                                                     BCPJ_TOKEN_FACILITADOR,
-                                                                                     BCPJ_PEDIDO_NUMERO,
-                                                                                     BCPJ_LINK_BOLETO,
-                                                                                     BCPJ_LINHA_DIGITAVEL,
-                                                                                     BCPJ_NOSSO_NUMERO
-                                                                                 )
-                                                                         VALUES(
-                                                                                    
-                                                                                     '${dado.id_unico}',
-                                                                                     '${dado.id_unico_original}',
-                                                                                     '${dado.token_facilitador}',
-                                                                                     '${dado.pedido_numero}',
-                                                                                     '${dado.linkBoleto}',
-                                                                                     '${dado.linhaDigitavel}',
-                                                                                     '${dado.nossonumero}'
-                                                                            
-                                                                               )`);
+                                                     querys.atualizaBoletoBanco(dado);
  
- 
-                                                     console.log('Consulta pagamento boleto!');
- 
-                                                     console.log(dado.id_unico);
- 
-                                                     boletos.consultaPagamentoBoleto(dado.id_unico)
-                                                           .then(async function (response) {
- 
-                                                                 console.log(response.dataclear);
-                                                                 let status = response.data[0].registro_sistema_bancario;
- 
-                                                                 const result_update = await sql.query(`UPDATE
-                                                                                                                  BOLETO_COBRANCA_PJBANK
-                                                                                                        SET
-                                                                                                                  BCPJ_STATUS = '${status}'
-                                                                                                        WHERE
-                                                                                                                  BCPJ_ID_UNICO = '${dado.id_unico}'`);
-                                                           })
-                                                           .catch(function (error) {
-                                                                 console.log(error);
-                                                           });
- 
-                                               })
+                                               });
+
+                                            }else{
+                                                querys.atualizaBoletoBanco(dados);
+                                                console.log("Não é array");
+                                            }
  
                                          }
  
@@ -331,7 +302,7 @@ router.get('/boleto', (req, res) => {
 
 router.get('/boleto/lote', (req, res) => {
 
-      let pedido_numero = req.query.pedido.split(',');
+      let pedido_numero = req.query.pedido.split('-');
       let empresa_cod = req.query.empresa;
 
       (async () => {
@@ -366,6 +337,42 @@ router.get('/boleto/lote', (req, res) => {
 
                               res.json({erro: "Não foi encontrado o boleto de cobrança para estes números de pedido!"});
                         }
+                        
+            }else{
+                  res.json({erro: "Sem dados das credenciais dessa empresa!"});
+            }
+      })();
+
+});
+
+router.get('/boleto/filtros', (req, res) => {
+
+      let empresa_cod = req.query.empresa;
+      let data_inicio = req.query.data_inicio.replace('-', '/');
+      let data_fim = req.query.data_fim.replace('-', '/');
+      let pagina = 1;
+      let pago = req.query.pago;
+
+      (async () => {
+
+            await sql.connect(config_conexao.sqlConfig);
+
+            const result_empresa = await querys.selectCredencialEmpresa(empresa_cod);
+
+            if(result_empresa.rowsAffected > 0){
+
+                        let credencial = result_empresa.recordset[0].CPEM_CREDENCIAL;
+                        let chave = result_empresa.recordset[0].CPEM_CHAVE;
+
+                        operacoes_boletos.consultaBoletosFiltros(credencial, chave, data_inicio, data_fim, pagina, pago)
+                        .then(function (response) {
+                              console.log(JSON.stringify(response.data));
+                              res.json(response.data);
+                        })
+                          .catch(function (error) {
+                              console.log(error);
+                              res.json(error);
+                        });
                         
             }else{
                   res.json({erro: "Sem dados das credenciais dessa empresa!"});

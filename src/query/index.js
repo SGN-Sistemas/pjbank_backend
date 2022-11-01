@@ -1,5 +1,6 @@
 const sql = require('mssql');
 const configBanco = require('../db/config_conexao');
+const boletos = require('../../http/gerar_boleto');
 
 
 const selectCredencialEmpresa = async (empresa) => {
@@ -137,11 +138,89 @@ const getBoletoCobrancaPjBank = async (pedido_numero) => {
   }
 }
 
+const getDadosEmpresa = async (empresa_cod) => {
+
+  try {
+
+    await sql.connect(configBanco.sqlConfig);
+
+    const result = await sql.query`SELECT 
+                                        EMPR_NOME,
+                                        EMPR_CGC,
+                                        EMPR_CEP,
+                                        EMPR_END,
+                                        EMPR_BAIRRO,
+                                        EMPR_CIDADE,
+                                        EMPR_UNFE_SIGLA,
+                                        EMPR_FONE,
+                                        EMPR_EMAIL
+                                    FROM 
+                                        EMPRESA
+                                    WHERE
+                                        EMPR_COD = ${empresa_cod}`;
+    return result;
+
+  } catch (err) {
+    console.log(err);
+    return err;
+  }
+
+}
+
+const atualizaBoletoBanco = async (dado) => {
+
+  const result_insert = await sql.query(`INSERT INTO
+                                                                         BOLETO_COBRANCA_PJBANK
+                                                                                 (
+                                                                                    
+                                                                                     BCPJ_ID_UNICO,
+                                                                                     BCPJ_ID_UNICO_ORIGINAL,
+                                                                                     BCPJ_TOKEN_FACILITADOR,
+                                                                                     BCPJ_PEDIDO_NUMERO,
+                                                                                     BCPJ_LINK_BOLETO,
+                                                                                     BCPJ_LINHA_DIGITAVEL,
+                                                                                     BCPJ_NOSSO_NUMERO
+                                                                                 )
+                                                                         VALUES(
+                                                                                    
+                                                                                     '${dado.id_unico}',
+                                                                                     '${dado.id_unico_original}',
+                                                                                     '${dado.token_facilitador}',
+                                                                                     '${dado.pedido_numero}',
+                                                                                     '${dado.linkBoleto}',
+                                                                                     '${dado.linhaDigitavel}',
+                                                                                     '${dado.nossonumero}'
+                                                                            
+                                                                               )`);
+ 
+ 
+                                                     console.log('Consulta pagamento boleto!');
+ 
+                                                     console.log(dado.id_unico);
+ 
+                                                     boletos.consultaPagamentoBoleto(dado.id_unico)
+                                                           .then(async function (response) {
+ 
+                                                                 console.log(response.dataclear);
+                                                                 let status = response.data[0].registro_sistema_bancario;
+ 
+                                                                 const result_update = await sql.query(`UPDATE
+                                                                                                                  BOLETO_COBRANCA_PJBANK
+                                                                                                        SET
+                                                                                                                  BCPJ_STATUS = '${status}'
+                                                                                                        WHERE
+                                                                                                                  BCPJ_ID_UNICO = '${dado.id_unico}'`);
+                                                           })
+                                                           .catch(function (error) {
+                                                                 console.log(error);
+                                                           });
+}
+
 module.exports = { 
-  
    selectCredencialEmpresa,
    dadosCobrancaTrParcelaRc, 
    dadosCliente, 
-   getBoletoCobrancaPjBank
-
+   getBoletoCobrancaPjBank,
+   getDadosEmpresa,
+   atualizaBoletoBanco
 };
