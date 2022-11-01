@@ -138,6 +138,27 @@ const getBoletoCobrancaPjBank = async (pedido_numero) => {
   }
 }
 
+const getPix = async (empr_clie_cod, tipo = 'E') => {
+
+  try {
+
+    await sql.connect(configBanco.sqlConfig);
+
+    const result = await sql.query`SELECT 
+                                      CHPI_TIPO,
+                                      CHPI_CHAVE
+                                   FROM 
+                                      CHAVES_PIX
+                                   WHERE
+                                      CHPI_EMPR_COD = ${empr_clie_cod}`;
+    return result;
+
+  } catch (err) {
+    console.log(err);
+    return err;
+  }
+}
+
 const getDadosEmpresa = async (empresa_cod) => {
 
   try {
@@ -222,5 +243,6 @@ module.exports = {
    dadosCliente, 
    getBoletoCobrancaPjBank,
    getDadosEmpresa,
-   atualizaBoletoBanco
+   atualizaBoletoBanco,
+   getPix
 };

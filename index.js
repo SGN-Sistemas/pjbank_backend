@@ -8,6 +8,7 @@ app.use(bodyParser.json());
 app.use('/', require('./src/route/boletoRoute'));
 app.use('/', require('./src/route/contaDigitalRoute'));
 app.use('/', require('./src/route/webHookRouter'));
+app.use('/', require('./src/route/pixRoute'));
  
 app.listen(7000, () => {
  

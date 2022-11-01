@@ -190,7 +190,7 @@ function consultaPagamentoBoleto(credencial, chave, id_unico){
             
 }
 
-function consultaBoletosFiltros(credencial, chave, data_inicio, data_fim, pagina = 1, pago = 0){
+function consultaBoletosRecebimentosFiltros(credencial, chave, data_inicio, data_fim, pagina = 1, pago = 0){
 
     var config = {
         method: 'get',
@@ -204,11 +204,25 @@ function consultaBoletosFiltros(credencial, chave, data_inicio, data_fim, pagina
    
 }
 
+function consultaBoletosPagamentosFiltros(credencial, chave, data_inicio, data_fim, pagina = 1, itensPorPagina = 50, status = 'realizadas'){
+
+        var config = {
+            method: 'get',
+            url: `https://sandbox.pjbank.com.br/contadigital/${credencial}/pagamentos?data_inicio=${data_inicio}&data_fim=${data_fim}&itensporpagina=${itensPorPagina}&pagina=${pagina}&status=${status}`,
+            headers: { 
+                'X-CHAVE-CONTA': `${chave}`
+            }
+        };
+
+        return axios(config);
+}
+
 module.exports = {
     gerarBoletoSemPjbank,
     gerarBoletoContaPjbank,
     impressaoBoletosLote,
     invalidarBoleto,
     consultaPagamentoBoleto,
-    consultaBoletosFiltros
+    consultaBoletosRecebimentosFiltros,
+    consultaBoletosPagamentosFiltros
 };

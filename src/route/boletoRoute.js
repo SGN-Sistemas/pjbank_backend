@@ -348,8 +348,8 @@ router.get('/boleto/lote', (req, res) => {
 router.get('/boleto/filtros', (req, res) => {
 
       let empresa_cod = req.query.empresa;
-      let data_inicio = req.query.data_inicio.replace('-', '/');
-      let data_fim = req.query.data_fim.replace('-', '/');
+      let data_inicio = req.query.data_inicio.replaceAll('-', '/');
+      let data_fim = req.query.data_fim.replaceAll('-', '/');
       let pagina = 1;
       let pago = req.query.pago;
 
@@ -364,7 +364,47 @@ router.get('/boleto/filtros', (req, res) => {
                         let credencial = result_empresa.recordset[0].CPEM_CREDENCIAL;
                         let chave = result_empresa.recordset[0].CPEM_CHAVE;
 
-                        operacoes_boletos.consultaBoletosFiltros(credencial, chave, data_inicio, data_fim, pagina, pago)
+                        operacoes_boletos.consultaBoletosRecebimentosFiltros(credencial, chave, data_inicio, data_fim, pagina, pago)
+                        .then(function (response) {
+                              console.log(JSON.stringify(response.data));
+                              res.json(response.data);
+                        })
+                          .catch(function (error) {
+                              console.log(error);
+                              res.json(error);
+                        });
+                        
+            }else{
+                  res.json({erro: "Sem dados das credenciais dessa empresa!"});
+            }
+      })();
+
+});
+
+router.get('/boleto/pagamentos/filtros', (req, res) => {
+
+      let empresa_cod = req.query.empresa;
+      let data_inicio = req.query.data_inicio.replaceAll('-', '/');
+      let data_fim = req.query.data_fim.replaceAll('-', '/');
+      let status = req.query.status;
+      let pagina = 1;
+      let itensPorPagina = 50;
+
+      console.log(data_inicio);
+      console.log(data_fim);
+
+      (async () => {
+
+            await sql.connect(config_conexao.sqlConfig);
+
+            const result_empresa = await querys.selectCredencialEmpresa(empresa_cod);
+
+            if(result_empresa.rowsAffected > 0){
+
+                        let credencial = result_empresa.recordset[0].CPEM_CREDENCIAL;
+                        let chave = result_empresa.recordset[0].CPEM_CHAVE;
+
+                        operacoes_boletos.consultaBoletosPagamentosFiltros(credencial, chave, data_inicio, data_fim, pagina, itensPorPagina, status)
                         .then(function (response) {
                               console.log(JSON.stringify(response.data));
                               res.json(response.data);
