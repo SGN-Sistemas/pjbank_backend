@@ -76,7 +76,8 @@ const dadosCliente = async (cliente_cod) => {
                                         PEFI_END,
                                         PEFI_BAIRRO,
                                         PEFI_CEP,
-                                        CLIE_TIPO
+                                        CLIE_TIPO,
+                                        PEFI_EMAIL
                                     FROM
                                         CLIENTE
                                     INNER JOIN
@@ -97,7 +98,8 @@ const dadosCliente = async (cliente_cod) => {
                                         PEJU_END,
                                         PEJU_BAIRRO,
                                         PEJU_CEP_COBR,
-                                        CLIE_TIPO
+                                        CLIE_TIPO,
+                                        PEJU_EMAIL
                                     FROM
                                         CLIENTE
                                     INNER JOIN
@@ -237,6 +239,35 @@ const atualizaBoletoBanco = async (dado) => {
                                                            });
 }
 
+const salvaCredenciaisEmpresa = async (dados) => {
+
+  try {
+
+    await sql.connect(configBanco.sqlConfig);
+
+    const result = await sql.query`INSERT INTO CREDENCIAL_PJBANK_EMPRESA
+                                                  (
+                                                    CPEM_EMPR_COD,
+                                                    CPEM_CREDENCIAL,
+                                                    CPEM_CHAVE,
+                                                    CPEM_WEBHOOK_CHAVE
+                                                  )
+                                                  VALUES
+                                                  (
+                                                    ${dados.empresa_cod},
+                                                    ${dados.credencial},
+                                                    ${dados.chave},
+                                                    ${dados.webhook_chave}
+                                                  )`;
+    return result;
+
+  } catch (err) {
+    console.log(err);
+    return err;
+  }
+
+}
+
 module.exports = { 
    selectCredencialEmpresa,
    dadosCobrancaTrParcelaRc, 
@@ -244,5 +275,6 @@ module.exports = {
    getBoletoCobrancaPjBank,
    getDadosEmpresa,
    atualizaBoletoBanco,
-   getPix
+   getPix,
+   salvaCredenciaisEmpresa
 };

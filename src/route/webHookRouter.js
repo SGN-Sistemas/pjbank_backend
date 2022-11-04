@@ -76,7 +76,7 @@ router.put('/webhook', async function (req, res) {
 
                         const result_update = await sql.query(`UPDATE 
                                                                     BOLETO_COBRANCA_PJBANK 
-                                                            SET 
+                                                                SET 
                                                                         BCPJ_DT_PAGAMENTO = '${data_pagamento}'
                                                                 WHERE
                                                                         BCPJ_ID_UNICO = '${id_unico}'`);
@@ -91,8 +91,6 @@ router.put('/webhook', async function (req, res) {
 
                         console.log("Baixou o recebimento!");
                     }
-
-                    
 
                         res.json({ "status": "200" });
 
