@@ -2,6 +2,7 @@ const express = require('express');
 const axios = require('axios');
 const nodemailer = require('nodemailer');
 const sql = require('mssql');
+const fs = require('fs');
 
 const datas = require('../../src/datas_formatadas');
 const smtp = require('../../src/smtp/config_smtp');
@@ -64,8 +65,10 @@ router.post('/boleto', (req, res) => {
                 let bairro_cliente;
                 let cep_cliente;
                 let email_cliente;
+
                 if (result_cliente.recordset.length <= req.body.parcelas.length) {
                       if (result_cliente.recordset[0].CLIE_TIPO == 'F') {
+
                             nome_cliente = cliente.CLIE_NOME;
                             pf_cliente = cliente.PEFI_CPF;
                             uf_cliente = cliente.PEFI_UNFE_SIGLA;
@@ -74,7 +77,9 @@ router.post('/boleto', (req, res) => {
                             bairro_cliente = cliente.PEFI_BAIRRO;
                             cep_cliente = cliente.PEFI_CEP;
                             email_cliente = cliente.PEFI_EMAIL;
+
                       } else if (result_cliente.recordset[0].CLIE_TIPO == 'J') {
+
                             nome_cliente = cliente.CLIE_NOME;
                             cpf_cliente = cliente.PEJU_CGC;
                             uf_cliente = cliente.PEJU_UNFE_SIGLA_COBR;
@@ -83,6 +88,7 @@ router.post('/boleto', (req, res) => {
                             bairro_cliente = cliente.PEJU_BAIRRO;
                             cep_cliente = cliente.PEJU_CEP_COBR;
                             email_cliente = cliente.PEJU_EMAIL;
+
                       }
                 } else {
                       nome_cliente = cliente.CLIE_NOME;
@@ -96,6 +102,8 @@ router.post('/boleto', (req, res) => {
                 }
                 let data_formatada;
                 array_parcelas = dados_parcela.map((parcela) => {
+                  console.log('data direto da requisição');
+                  console.log(parcela.TRPR_DTVENC)
                       data_formatada = datas.getFormatDate(parcela.TRPR_DTVENC);
                       console.log(data_formatada)
                       let obj = {
@@ -191,6 +199,7 @@ router.post('/boleto', (req, res) => {
                                            }
                                         }
                                         obj_result.erro = [];
+                                       
                                         res.json(obj_result);
                                   } else {
                                         res.json('Problema na requisição')
