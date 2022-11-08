@@ -40,7 +40,8 @@ const dadosCobrancaTrParcelaRc = async (codigos) => {
                                           TRPR_VALJUR,
                                           TRPR_VALMULTA,
                                           TRPR_VALDESC,
-                                          CLIE_TIPO_COD
+                                          CLIE_TIPO_COD,
+                                          TRPR_OBS
                                     FROM
                                           TR_PARCELA_RC
                                     INNER JOIN
@@ -225,7 +226,7 @@ const atualizaBoletoBanco = async (dado) => {
                                                            .then(async function (response) {
  
                                                                  console.log(response.dataclear);
-                                                                 let status = response.data[0].registro_sistema_bancario;
+                                                                 let status = (response.data[0].registro_sistema_bancario) ? response.data[0].registro_sistema_bancario : '';
  
                                                                  const result_update = await sql.query(`UPDATE
                                                                                                                   BOLETO_COBRANCA_PJBANK
