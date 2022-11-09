@@ -3,6 +3,7 @@ const axios = require('axios');
 const nodemailer = require('nodemailer');
 const sql = require('mssql');
 const fs = require('fs');
+const Downloader = require("nodejs-file-downloader");
 
 const datas = require('../../src/datas_formatadas');
 const smtp = require('../../src/smtp/config_smtp');
@@ -366,6 +367,37 @@ router.post('/boleto', (req, res) => {
                                                                   }
                                                             }
                                                             obj_result.erro = [];
+
+                                                            let i = 1;
+                                                            
+
+                                                            // obj_result.boleto.forEach(async (ele) => {
+
+                                                            //       console.log(ele.link)
+
+                                                            //       let nome_arquivo = "Sem_nome_"+i;
+
+                                                            //       console.log(nome_arquivo);
+
+                                                            //       const downloader = new Downloader({
+                                                            //             url: ele.link, 
+                                                            //             directory: "./downloads", 
+                                                            //             fileName: nome_arquivo
+                                                            //        });
+
+                                                            //           try {
+                                                            //             const {filePath,downloadStatus} = await downloader.download(); 
+                                                                        
+                                                            //             i = i + 1;
+                                                            //             console.log("All done");
+                                                                        
+                                                            //           } catch (error) {
+                                                                        
+                                                            //             console.log("Download failed", error);
+                                                            //           }
+
+
+                                                            // });
       
                                                             res.json(obj_result);
                                                       } else {

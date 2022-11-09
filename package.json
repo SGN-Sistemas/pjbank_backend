@@ -20,6 +20,7 @@
     "form-data": "^4.0.0",
     "morgan": "^1.10.0",
     "mssql": "^9.0.1",
+    "nodejs-file-downloader": "^4.10.2",
     "nodemailer": "^6.8.0",
     "sequelize": "^6.25.0"
   },
