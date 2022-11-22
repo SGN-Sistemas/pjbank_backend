@@ -51,6 +51,8 @@ router.put('/webhook', async function (req, res) {
 
         } else if (req.body.tipo == 'recebimento_boleto') {
 
+            console.log("PJbank acessou via webhook!");
+
             let data_pagamento = '';
 
             if (req.body.data_pagamento) {
@@ -60,7 +62,7 @@ router.put('/webhook', async function (req, res) {
                 data_pagamento = data_formatada;
 
                 let id_unico = req.body.id_unico;
-                let valor_pago = parseFloat(req.body.valor.replace(',', '.'));
+                let valor_pago = parseFloat(req.body.valor);
 
                 const select_boleto_cobranca = await sql.query(`SELECT 
                                                                             BCPJ_PEDIDO_NUMERO
@@ -254,7 +256,10 @@ router.put('/webhook', async function (req, res) {
         }
 
     } catch (err) {
+        
         console.log(err);
+
+        res.json({ "status": "501", "descricao": err });
     }
 });
 
