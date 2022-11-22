@@ -210,6 +210,11 @@ router.put('/webhook', async function (req, res) {
                                                                     )
                         `)
 
+                    }else{
+
+                        res.json({ "status": "501"});
+
+                        console.log("Não conseguiu pegar o last id!");
                     }
 
                     const selectTRRC_STTR_COD = await sql.query(`SELECT
@@ -248,15 +253,24 @@ router.put('/webhook', async function (req, res) {
                     `)
 
                     console.log("Baixou o recebimento!");
+
+                    res.json({ "status": "200" });
+
+                }else{
+
+                    console.log('Sem registros do BOLETO_COBRANCA_PJBANK');
+                    res.json({ "status": "501"});
                 }
 
-                res.json({ "status": "200" });
+            }else{
 
+                console.log("Não existe ou está vazio o atributo data_pagamento no json do pjbank");              
+                res.json({ "status": "501"});
             }
         }
 
     } catch (err) {
-        
+
         console.log(err);
 
         res.json({ "status": "501", "descricao": err });
