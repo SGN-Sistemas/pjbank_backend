@@ -54,11 +54,12 @@ router.put('/webhook', async function (req, res) {
             console.log("PJbank acessou via webhook!");
 
             let data_pagamento = '';
+            let saldo = 0;
 
             if (req.body.data_pagamento) {
 
-                let data_array = req.body.data_pagamento.split('/');
-                let data_formatada = data_array[2] + "-" + data_array[0] + "-" + data_array[1];
+                let data_array = req.body.data_pagamento.split('\/');
+                let data_formatada = data_array[2] + "-" + data_array[1] + "-" + data_array[0];
                 data_pagamento = data_formatada;
 
                 let id_unico = req.body.id_unico;
@@ -107,16 +108,20 @@ router.put('/webhook', async function (req, res) {
                                                                 COBRANCA
                                                             ON
                                                                 COBR_COD = RECP_COBR_COD
+                                                            inner join 
+                                                                transacao_rc
+                                                            on
+                                                                transacao_rc.trrc_cod = TR_PARCELA_RC. trpr_trrc_cod
                                                             WHERE
                                                                 TRPR_COD = ${numero_pedido}`);
 
                     const selectLastID = await sql.query(`
                                                         SELECT 
-                                                            MAX(MOBA_COD) + 1 
+                                                            MAX(MOBA_COD) + 1 as MOBA_COD
                                                         FROM 
                                                             moviment_bancaria`);
 
-                    const succID = selectsuccCod.recordset[0].SUCC_COD;
+                    const succID = selectsuccCod.recordset[0].COBR_SUCC_COD;
 
                     const COBR_TIMB_COD = selectsuccCod.recordset[0].COBR_TIMB_COD;
 
@@ -133,7 +138,7 @@ router.put('/webhook', async function (req, res) {
                                                             SUCC_COD = ${succID}`)
 
                     const selectIDLogMoba = await sql.query(`SELECT 
-                                                                MAX(lomb_moba_cod) + 1 
+                                                                MAX(lomb_moba_cod) + 1 as LOMB_MOBA_COD
                                                             FROM 
                                                                 LOG_MOVIMENT_BANCARIA`)
 
@@ -141,7 +146,7 @@ router.put('/webhook', async function (req, res) {
 
                         let lastID = selectLastID.recordset[0].MOBA_COD;
 
-                        let saldo = selectSaldo.recordset[0].SALDO + valor_pago;
+                        saldo = selectSaldo.recordset[0].SALDO + valor_pago;
 
                         let lastIDLOMB = selectIDLogMoba.recordset[0].LOMB_MOBA_COD
 
@@ -167,7 +172,7 @@ router.put('/webhook', async function (req, res) {
                                     'S',
                                     '${valor_pago}',
                                     ${succID},
-                                    'GETDATE()',
+                                    GETDATE(),
                                     ${COBR_TIMB_COD},
                                     ${saldo},
                                     'C',
@@ -189,8 +194,8 @@ router.put('/webhook', async function (req, res) {
                                                                     (
                                                                         ${lastIDLOMB},
                                                                         1,
-                                                                        'GETDATE()',
-                                                                        'GETDATE()',
+                                                                        GETDATE(),
+                                                                        GETDATE(),
                                                                         'I'
                                                                     )
                         `)
@@ -206,7 +211,7 @@ router.put('/webhook', async function (req, res) {
                                                                     ( 
                                                                         ${numero_pedido},
                                                                         ${lastIDLOMB},
-                                                                        'GETDATE()'
+                                                                        GETDATE()
                                                                     )
                         `)
 
