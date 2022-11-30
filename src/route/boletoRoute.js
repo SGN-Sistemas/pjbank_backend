@@ -12,7 +12,7 @@ const operacoes_boletos = require('../../http/gerar_boleto');
 const config_conexao = require('../db/config_conexao');
 const querys = require('../query/index');
 const utilitarios = require('../utilitarios/verificaExisteEmpresaIgual');
-const { response } = require('express');
+
 
 const router = express.Router();
 
@@ -432,53 +432,52 @@ router.post('/boleto', (req, res) => {
       })()
 });
 
-router.get('/boleto', (req, res) => {
 
-      let pedido_numero = req.query.pedido;
-      let empresa_cod = req.query.empresa;
+router.get('/boleto', (req, res, next) => {
 
-      (async () => {
+            let pedido_numero = req.query.pedido;
+            let empresa_cod = req.query.empresa;
 
-            await sql.connect(config_conexao.sqlConfig);
+            (async () => {
 
-            const result_empresa = await querys.selectCredencialEmpresa(empresa_cod);
+                  await sql.connect(config_conexao.sqlConfig);
 
-            if (result_empresa.rowsAffected > 0) {
+                  const result_empresa = await querys.selectCredencialEmpresa(empresa_cod);
+
+                  if(result_empresa.rowsAffected <= 0){
+                        throw next(new Error("Sem dados das credenciais dessa empresa!"));
+                  }
 
                   let credencial = result_empresa.recordset[0].CPEM_CREDENCIAL;
                   let chave = result_empresa.recordset[0].CPEM_CHAVE;
                   const result_id_unico = await querys.getBoletoCobrancaPjBank(pedido_numero);
 
-                  console.log(result_id_unico)
+                  console.log(result_id_unico);
 
-                  if (result_id_unico.rowsAffected > 0) {
-
-                        let id_unico = result_id_unico.recordset[0].BCPJ_ID_UNICO;
-
-                        operacoes_boletos.consultaPagamentoBoleto(credencial, chave, id_unico)
-                              .then(async function (response) {
-
-                                    console.log(response.data);
-                                    res.json(response.data);
-                              })
-                              .catch(function (error) {
-                                    console.log(error);
-                                    res.json(error);
-                              });
-
-                  } else {
-
-                        res.json({ erro: "Não foi encontrado o boleto de cobrança para este número de pedido!" });
+                  if(result_id_unico.rowsAffected <= 0){
+                        throw next(new Error("Não foi encontrado o boleto de cobrança para este número de pedido!"));
                   }
 
-            } else {
-                  res.json({ erro: "Sem dados das credenciais dessa empresa!" });
-            }
-      })();
+                  let id_unico = result_id_unico.recordset[0].BCPJ_ID_UNICO;
+
+                  operacoes_boletos.consultaPagamentoBoleto(credencial, chave, id_unico)
+                  .then(async function (response) {
+
+                        console.log(response.data);
+                        res.json(response.data);
+                  })
+                  .catch(function (error) {
+                        console.log(error);
+                        res.json(error);
+                  });
+
+             })()
+             .then(resp => console.log("caiu no then",resp))
+             .catch(err => console.log("caiu no erro",err));
 
 });
 
-router.get('/boleto/lote', (req, res) => {
+router.get('/boleto/lote', (req, res, next) => {
 
       let pedido_numero = req.query.pedido.split('-');
       let empresa_cod = req.query.empresa;
@@ -489,41 +488,39 @@ router.get('/boleto/lote', (req, res) => {
 
             const result_empresa = await querys.selectCredencialEmpresa(empresa_cod);
 
-            if (result_empresa.rowsAffected > 0) {
-
-                  let credencial = result_empresa.recordset[0].CPEM_CREDENCIAL;
-                  let chave = result_empresa.recordset[0].CPEM_CHAVE;
-                  const dadosCobranca = await querys.getBoletoCobrancaPjBank(pedido_numero);
-
-                  console.log(dadosCobranca);
-
-                  if (dadosCobranca.rowsAffected > 0) {
-
-                        let numeros_pedidos = dadosCobranca.recordset.map(item => item.BCPJ_PEDIDO_NUMERO);
-
-                        operacoes_boletos.impressaoBoletosLote(credencial, chave, numeros_pedidos)
-                              .then(function (response) {
-                                    console.log(JSON.stringify(response.data));
-                                    res.json(response.data);
-                              })
-                              .catch(function (error) {
-                                    console.log(error);
-                                    res.json(error);
-                              });
-
-                  } else {
-
-                        res.json({ erro: "Não foi encontrado o boleto de cobrança para estes números de pedido!" });
-                  }
-
-            } else {
-                  res.json({ erro: "Sem dados das credenciais dessa empresa!" });
+            if(result_empresa.rowsAffected <= 0){
+                 throw next(new Error("Sem dados das credenciais dessa empresa!"));
             }
-      })();
+
+            let credencial = result_empresa.recordset[0].CPEM_CREDENCIAL;
+            let chave = result_empresa.recordset[0].CPEM_CHAVE;
+            const dadosCobranca = await querys.getBoletoCobrancaPjBank(pedido_numero);
+
+            console.log(dadosCobranca);
+
+            if(dadosCobranca.rowsAffected <= 0){
+                  throw next(new Error("Não foi encontrado o boleto de cobrança para estes números de pedido!"));
+            }
+
+            let numeros_pedidos = dadosCobranca.recordset.map(item => item.BCPJ_PEDIDO_NUMERO);
+
+            operacoes_boletos.impressaoBoletosLote(credencial, chave, numeros_pedidos)
+            .then(function (response) {
+                  console.log(JSON.stringify(response.data));
+                  res.json(response.data);
+            })
+            .catch(function (error) {
+                  console.log(error);
+                  res.json(error);
+            });
+
+      })()
+      .then(resp => console.log(resp))
+      .catch(err => err);
 
 });
 
-router.get('/boleto/filtros', (req, res) => {
+router.get('/boleto/filtros', (req, res, next) => {
 
       let empresa_cod = req.query.empresa;
       let data_inicio = req.query.data_inicio.replaceAll('-', '/');
@@ -537,29 +534,29 @@ router.get('/boleto/filtros', (req, res) => {
 
             const result_empresa = await querys.selectCredencialEmpresa(empresa_cod);
 
-            if (result_empresa.rowsAffected > 0) {
-
-                  let credencial = result_empresa.recordset[0].CPEM_CREDENCIAL;
-                  let chave = result_empresa.recordset[0].CPEM_CHAVE;
-
-                  operacoes_boletos.consultaBoletosRecebimentosFiltros(credencial, chave, data_inicio, data_fim, pagina, pago)
-                        .then(function (response) {
-                              console.log(JSON.stringify(response.data));
-                              res.json(response.data);
-                        })
-                        .catch(function (error) {
-                              console.log(error);
-                              res.json(error);
-                        });
-
-            } else {
-                  res.json({ erro: "Sem dados das credenciais dessa empresa!" });
+            if(result_empresa.rowsAffected <= 0){
+                  throw next(new Error("Sem dados das credenciais dessa empresa!"));
             }
-      })();
+
+            let credencial = result_empresa.recordset[0].CPEM_CREDENCIAL;
+            let chave = result_empresa.recordset[0].CPEM_CHAVE;
+
+            operacoes_boletos.consultaBoletosRecebimentosFiltros(credencial, chave, data_inicio, data_fim, pagina, pago)
+            .then(function (response) {
+                   console.log(JSON.stringify(response.data));
+                   res.json(response.data);
+             })
+            .catch(function (error) {
+                   console.log(error);
+                   res.json(error);
+            });
+      })()
+      .then(resp => console.log(resp))
+      .catch(err => console.log(err));
 
 });
 
-router.get('/boleto/pagamentos/filtros', (req, res) => {
+router.get('/boleto/pagamentos/filtros', (req, res, next) => {
 
       let empresa_cod = req.query.empresa;
       let data_inicio = req.query.data_inicio.replaceAll('-', '/');
@@ -577,29 +574,30 @@ router.get('/boleto/pagamentos/filtros', (req, res) => {
 
             const result_empresa = await querys.selectCredencialEmpresa(empresa_cod);
 
-            if (result_empresa.rowsAffected > 0) {
-
-                  let credencial = result_empresa.recordset[0].CPEM_CREDENCIAL;
-                  let chave = result_empresa.recordset[0].CPEM_CHAVE;
-
-                  operacoes_boletos.consultaBoletosPagamentosFiltros(credencial, chave, data_inicio, data_fim, pagina, itensPorPagina, status)
-                        .then(function (response) {
-                              console.log(JSON.stringify(response.data));
-                              res.json(response.data);
-                        })
-                        .catch(function (error) {
-                              console.log(error);
-                              res.json(error);
-                        });
-
-            } else {
-                  res.json({ erro: "Sem dados das credenciais dessa empresa!" });
+            if(result_empresa.rowsAffected <= 0){
+                  throw next(new Error("Sem dados das credenciais dessa empresa!"));
             }
-      })();
+
+            let credencial = result_empresa.recordset[0].CPEM_CREDENCIAL;
+            let chave = result_empresa.recordset[0].CPEM_CHAVE;
+
+            operacoes_boletos.consultaBoletosPagamentosFiltros(credencial, chave, data_inicio, data_fim, pagina, itensPorPagina, status)
+            .then(function (response) {
+                  console.log(JSON.stringify(response.data));
+                  res.json(response.data);
+            })
+            .catch(function (error) {
+                  console.log(error);
+                  res.json(error);
+            });
+
+      })()
+      .then(resp => console.log(resp))
+      .catch(err => console.log(err));
 
 });
 
-router.delete('/boleto', (req, res) => {
+router.delete('/boleto', (req, res, next) => {
 
       let pedido_numero = req.query.pedido;
       let empresa_cod = req.query.empresa;
@@ -610,20 +608,26 @@ router.delete('/boleto', (req, res) => {
 
             const result_empresa = await querys.selectCredencialEmpresa(empresa_cod);
 
+            if(result_empresa.rowsAffected <= 0){
+                  throw next(new Error("Sem dados das credenciais dessa empresa!"));
+            }
+
             let credencial = result_empresa.recordset[0].CPEM_CREDENCIAL;
             let chave = result_empresa.recordset[0].CPEM_CHAVE;
 
             operacoes_boletos.invalidarBoleto(credencial, chave, pedido_numero)
-                  .then(function (response) {
-                        console.log(JSON.stringify(response.data));
-                        res.json(response.data);
-                  })
-                  .catch(function (error) {
-                        console.log(error);
-                        res.json(error);
-                  });
+            .then(function (response) {
+                  console.log(JSON.stringify(response.data));
+                  res.json(response.data);
+            })
+            .catch(function (error) {
+                  console.log(error);
+                  res.json(error);
+            });
 
-      })();
+      })()
+      .then(resp => console.log(resp))
+      .catch(err => console.log(err));
 
 });
 
