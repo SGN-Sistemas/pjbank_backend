@@ -2,7 +2,6 @@ const express = require('express');
 const axios = require('axios');
 const nodemailer = require('nodemailer');
 const sql = require('mssql');
-const fs = require('fs');
 const download = require('../utils/dowload')
 
 const datas = require('../../src/datas_formatadas');
@@ -12,7 +11,6 @@ const operacoes_boletos = require('../../http/gerar_boleto');
 const config_conexao = require('../db/config_conexao');
 const querys = require('../query/index');
 const utilitarios = require('../utilitarios/verificaExisteEmpresaIgual');
-
 
 const router = express.Router();
 
@@ -468,7 +466,7 @@ router.get('/boleto', (req, res, next) => {
                   })
                   .catch(function (error) {
                         console.log(error);
-                        res.json(error);
+                        throw next(new Error(error));
                   });
 
              })()
@@ -511,7 +509,7 @@ router.get('/boleto/lote', (req, res, next) => {
             })
             .catch(function (error) {
                   console.log(error);
-                  res.json(error);
+                  throw next(new Error(error));
             });
 
       })()
@@ -548,7 +546,7 @@ router.get('/boleto/filtros', (req, res, next) => {
              })
             .catch(function (error) {
                    console.log(error);
-                   res.json(error);
+                   throw next(new Error(error));
             });
       })()
       .then(resp => console.log(resp))
@@ -588,7 +586,7 @@ router.get('/boleto/pagamentos/filtros', (req, res, next) => {
             })
             .catch(function (error) {
                   console.log(error);
-                  res.json(error);
+                  throw next(new Error(error));
             });
 
       })()
@@ -622,7 +620,7 @@ router.delete('/boleto', (req, res, next) => {
             })
             .catch(function (error) {
                   console.log(error);
-                  res.json(error);
+                  throw next(new Error(error));
             });
 
       })()

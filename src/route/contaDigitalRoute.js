@@ -5,7 +5,7 @@ const conta = require('../../http/admin_conta_digital');
 const querys = require('../query/index');
 const limpaMascaras = require('../retiraMascaras/limpaMascara');
 
-router.get('/conta', (req, res) => {
+router.get('/conta', (req, res, next) => {
 
     let empresa_cod = req.query.empresa;
 
@@ -14,51 +14,35 @@ router.get('/conta', (req, res) => {
         const result_empresa = await querys.selectCredencialEmpresa(empresa_cod);
 
         if (result_empresa.rowsAffected <= 0) {
-            res.json({ erro: 'Empresa não encontrada!' });
+            throw next(new Error('Empresa não encontrada!'));
         }
 
         let credencial = result_empresa.recordset[0].CPEM_CREDENCIAL;
         let chave = result_empresa.recordset[0].CPEM_CHAVE;
 
         conta.infoContaDigital(credencial, chave)
-            .then(function (response) {
-                console.log(JSON.stringify(response.data));
-                res.json(response.data);
-            })
-            .catch(function (error) {
-                console.log(error);
-                res.json(error);
-            });
+        .then(function (response) {
+            console.log(JSON.stringify(response.data));
+            res.json(response.data);
+        })
+        .catch(function (error) {
+            console.log(error);
+            throw next(new Error(error));
+        });
 
     })()
+    .then(resp => console.log(resp))
+    .catch(err => console.log(err));
 });
 
-router.post('/conta', async (req, res) => {
-
-    // let dadosEmpresa = {
-    //     "nome_empresa": "Exemplo Conta Digital",
-    //     "cnpj": "20867577000102",
-    //     "cep": "13032525",
-    //     "endereco": "Rua Joaquim Vilac",
-    //     "numero": "509",
-    //     "bairro": "Vila Teixeira",
-    //     "complemento": "",
-    //     "cidade": "Campinas",
-    //     "estado": "SP",
-    //     "ddd": "19",
-    //     "telefone": "987652345",
-    //     "email": "api@pjbank.com.br",
-    //     "webhook": "http://example.com.br"
-    // };
-
+router.post('/conta', async (req, res, next) => {
 
     const empresa_cod = req.query.empresa;
 
     const empresa = await querys.getDadosEmpresa(empresa_cod);
 
     if (empresa.rowsAffected <= 0) {
-        console.log('Não foi encontrado os dados da empresa!');
-        res.json({ erro: 'Não foi encontrado os dados da empresa!' });
+        throw next(new Error('Não foi encontrado os dados da empresa!'));
     }
 
     let dadosEmpresa = {
@@ -82,28 +66,32 @@ router.post('/conta', async (req, res) => {
     (async () => {
 
         if (!dadosEmpresa) {
-            res.json({ erro: 'Não foi passado os dados da empresa!' });
+           throw next(new Error('Não foi passado os dados da empresa!'));
         }
 
         conta.criarContaDigital(dadosEmpresa)
-            .then(async function (response) {
-                console.log(JSON.stringify(response.data));
+        .then(async function (response) {
 
-                credencial_obj.empresa_cod = empresa_cod;
-                credencial_obj.credencial = response.data.credencial;
-                credencial_obj.chave = response.data.chave;
-                credencial_obj.webhook_chave = response.data.webhook_chave;
+            console.log(JSON.stringify(response.data));
 
-                let result = await querys.salvaCredenciaisEmpresa(credencial_obj);
+            credencial_obj.empresa_cod = empresa_cod;
+            credencial_obj.credencial = response.data.credencial;
+            credencial_obj.chave = response.data.chave;
+            credencial_obj.webhook_chave = response.data.webhook_chave;
 
-                res.json(response.data);
-            })
-            .catch(function (error) {
-                console.log(error.response.data.msg);
-                res.json({ erro: error.response.data });
-            });
+            let result = await querys.salvaCredenciaisEmpresa(credencial_obj);
 
-    })();
+            res.json(response.data);
+        })
+        .catch(function (error) {
+
+            console.log(error.response.data.msg);
+            throw next(new Error(error.response.data));
+        });
+
+    })()
+    .then(resp => console.log(resp))
+    .catch(err => console.log(err));
 
 });
 
