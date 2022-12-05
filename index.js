@@ -14,7 +14,7 @@ app.use('/', require('./src/route/pixRoute'));
  
 app.use((error, req, res, next) => {
 
-     res.status(500).json({message: error.message});
+     res.status(500).json({status: 500, message: error.message});
     
 });
 

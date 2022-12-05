@@ -21,7 +21,7 @@ let obj_result = {};
 let credencial;
 let email_cliente;
 
-router.post('/boleto', (req, res) => {
+router.post('/boleto', (req, res, next) => {
 
       let codigos = req.body.parcelas;
       let email_req = req.body.email;
@@ -83,8 +83,6 @@ router.post('/boleto', (req, res) => {
                               bairro_cliente = cliente[0].PEFI_BAIRRO;
                               cep_cliente = cliente[0].PEFI_CEP;
                               email_cliente = cliente[0].PEFI_EMAIL;
-
-
 
                               let data_formatada;
                               array_parcelas = dados_parcela.map((parcela) => {
@@ -197,16 +195,14 @@ router.post('/boleto', (req, res) => {
                                                       )
 
                                                 } else {
-                                                      res.json('Problema na requisição')
+                                                      throw next(new Error("Problema na requisição!"));
                                                 }
                                           })
                                           .catch(function (error) {
-                                                console.log(error);
-                                                res.json({ 'boleto': 'Problema na requisição' })
+                                                throw next(new Error("Problema na requisição!"));
                                           });
                               } else {
-                                    console.log("Existem parcelas que já foram emitidas!");
-                                    res.json("Existem parcelas que já foram emitidas!");
+                                    throw next(new Error("Existem parcelas que já foram emitidas!"));
                               }
 
                         } else {
@@ -408,22 +404,21 @@ router.post('/boleto', (req, res) => {
 
                                                                   res.json(obj_result);
                                                             } else {
-                                                                  res.json('Problema na requisição');
+                                                                  throw next(new Error("Problema na requisição!"));
                                                             }
                                                       })
                                                       .catch(function (error) {
-                                                            console.log(error);
-                                                            res.json({ 'boleto': 'Problema na requisição' });
+                                                            throw next(new Error("Problema na requisição!"));
                                                       });
                                           } else {
-                                                console.log("Existem parcelas que já foram emitidas!");
-                                                res.json("Existem parcelas que já foram emitidas!");
+                                                throw next(new Error("Existem parcelas que já foram emitidas!"));
                                           }
                                     })
                         }
 
                   } catch (err) {
                         console.log(err);
+                        throw next(new Error("Problema na requisição!"));
                   }
             })()
 
