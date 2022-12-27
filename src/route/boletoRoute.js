@@ -116,94 +116,105 @@ router.post('/boleto', (req, res, next) => {
                                     return obj;
                               });
 
-                              if (exists_boletos.rowsAffected[0] <= 0) {
-                                    var data = JSON.stringify({
-                                          "cobrancas": [...array_parcelas]
-                                    });
-                                    var config = {
-                                          method: 'post',
-                                          url: `https://sandbox.pjbank.com.br/contadigital/${credencial}/recebimentos/transacoes`,
-                                          headers: {
-                                                'Content-Type': 'application/json'
-                                          },
-                                          data: data
-                                    };
-                                    axios(config)
-                                          .then(async function (response) {
-                                                let dados = null;
-                                                console.log('teste')
-                                                console.log(response.data)
-                                                if (response.data) {
-                                                      dados = response.data;
-
-                                                      obj_result.mensagem = "Boletos gerados com sucesso";
-                                                      let contador = 0;
-                                                      obj_result.boleto = [];
-                                                      let cont = 1;
-
-                                                      if (Array.isArray(response.data)) {
-
-                                                            response.data.filter(data => data.status != '400').forEach((boleto) => {
-                                                                  console.log(boleto)
-                                                                  obj_result.boleto.push({ id: cont, link: boleto.linkBoleto });
-                                                                  cont++;
-
-                                                            })
-
-                                                      } else {
-                                                            obj_result.boleto.push({ id: cont, link: response.data.linkBoleto });
-                                                            cont++;
-                                                      }
-
-                                                      let n = 1;
-
-                                                      let links_boletos = obj_result.boleto.reduce((acumulador, atual) => {
-                                                            acumulador += "Boleto " + n + ": " + atual.link + '\n';
-                                                            n++;
-                                                            return acumulador;
-
-                                                      }, '');
-
-                                                      // email_cliente
-
-                                                      if (email_req == 1) {
-                                                            email.enviar_email('sac@sgnsistemas.com.br', email_cliente, 'Boletos gerados!', ('Links dos boletos: \n\n' + links_boletos), transporter);
-                                                      }
-
-                                                      if (dados) {
-                                                            console.log(dados);
-
-                                                            if (Array.isArray(dados)) {
-                                                                  dados.forEach(async (dado) => {
-                                                                        querys.atualizaBoletoBanco(dado);
-                                                                  });
-
-                                                            } else {
-                                                                  querys.atualizaBoletoBanco(dados);
-                                                                  console.log("Não é array");
-                                                            }
-                                                      }
-                                                      obj_result.erro = [];
-
-                                                      res.json(obj_result);
-
-                                                      obj_result.boleto.forEach(
-                                                            (pos, i) => {
-                                                                  download(pos.link, `boleto${i}.pdf`)
-
-                                                            }
-                                                      )
-
-                                                } else {
-                                                      throw next(new Error("Problema na requisição!"));
-                                                }
-                                          })
-                                          .catch(function (error) {
-                                                throw next(new Error("Problema na requisição!"));
-                                          });
-                              } else {
+                              if(exists_boletos.rowsAffected[0] > 0){
                                     throw next(new Error("Existem parcelas que já foram emitidas!"));
                               }
+
+                              var data = JSON.stringify({
+                                    "cobrancas": [...array_parcelas]
+                              });
+
+                              var config = {
+                                    method: 'post',
+                                    url: `https://sandbox.pjbank.com.br/contadigital/${credencial}/recebimentos/transacoes`,
+                                    headers: {
+                                          'Content-Type': 'application/json'
+                                    },
+                                    data: data
+                              };
+
+                              axios(config)
+                                    .then(async function (response) {
+
+                                          let dados = null;
+                                          console.log('teste');
+                                          console.log(response.data);
+
+                                          if(!response.data){
+                                                throw next(new Error("Problema na requisição!"));
+                                          }
+
+                                          dados = response.data;
+
+                                          obj_result.mensagem = "Boletos gerados com sucesso";
+                                          let contador = 0;
+                                          obj_result.boleto = [];
+                                          let cont = 1;
+
+                                          if (Array.isArray(response.data)) {
+
+                                                response.data.filter(data => data.status != '400').forEach((boleto) => {
+                                                            console.log(boleto)
+                                                            obj_result.boleto.push({ id: cont, link: boleto.linkBoleto });
+                                                            cont++;
+
+                                                });
+
+                                          }else {
+
+                                                obj_result.boleto.push({ id: cont, link: response.data.linkBoleto });
+                                                cont++;
+                                          }
+
+                                          let n = 1;
+
+                                          let links_boletos = obj_result.boleto.reduce((acumulador, atual) => {
+
+                                                acumulador += "Boleto " + n + ": " + atual.link + '\n';
+                                                n++;
+                                                return acumulador;
+
+                                          }, '');
+
+                                                // email_cliente
+
+                                          if (email_req == 1) {
+                                                email.enviar_email('sac@sgnsistemas.com.br', email_cliente, 'Boletos gerados!', ('Links dos boletos: \n\n' + links_boletos), transporter);
+                                           }
+
+                                          if (dados) {
+
+                                                console.log(dados);
+
+                                                if (Array.isArray(dados)) {
+
+                                                            dados.forEach(async (dado) => {
+                                                                  querys.atualizaBoletoBanco(dado);
+                                                            });
+
+                                                } else {
+
+                                                            querys.atualizaBoletoBanco(dados);
+                                                            console.log("Não é array");
+                                                }
+                                          }
+
+                                          obj_result.erro = [];
+
+                                          res.json(obj_result);
+
+                                          obj_result.boleto.forEach(
+                                                      (pos, i) => {
+                                                            download(pos.link, `boleto${i}.pdf`)
+
+                                                      }
+                                          )
+
+                                    })
+                                    .catch(function (error) {
+                                          //throw next(new Error("Problema na requisição!"));
+                                          console.log(error)
+                                    });
 
                         } else {
 
@@ -408,7 +419,8 @@ router.post('/boleto', (req, res, next) => {
                                                             }
                                                       })
                                                       .catch(function (error) {
-                                                            throw next(new Error("Problema na requisição!"));
+                                                            //throw next(new Error("Problema na requisição!"));
+                                                            console.log(error)
                                                       });
                                           } else {
                                                 throw next(new Error("Existem parcelas que já foram emitidas!"));
@@ -418,7 +430,7 @@ router.post('/boleto', (req, res, next) => {
 
                   } catch (err) {
                         console.log(err);
-                        throw next(new Error("Problema na requisição!"));
+                        //throw next(new Error("Problema na requisição!"));
                   }
             })()
 

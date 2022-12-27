@@ -3,7 +3,12 @@ const router = express.Router();
 
 const conta = require('../../http/admin_conta_digital');
 const querys = require('../query/index');
-const limpaMascaras = require('../retiraMascaras/limpaMascara');
+const limpaMascaras = require('../utilitarios/retiraMascaras/limpaMascara');
+
+var axios = require('axios');
+var FormData = require('form-data');
+var fs = require('fs');
+var data = new FormData();
 
 router.get('/conta', (req, res, next) => {
 
@@ -14,6 +19,7 @@ router.get('/conta', (req, res, next) => {
         const result_empresa = await querys.selectCredencialEmpresa(empresa_cod);
 
         if (result_empresa.rowsAffected <= 0) {
+    
             throw next(new Error('Empresa não encontrada!'));
         }
 
@@ -94,5 +100,50 @@ router.post('/conta', async (req, res, next) => {
     .catch(err => console.log(err));
 
 });
+
+
+router.post('/conta/documentos', async (req, res, next) => {
+
+    data.append('arquivos', fs.createReadStream('/path/to/file'));
+    data.append('tipo', 'contratosocial');
+
+    let empresa_cod = req.query.empresa;
+
+    (async () => {
+
+        const result_empresa = await querys.selectCredencialEmpresa(empresa_cod);
+
+        if (result_empresa.rowsAffected <= 0) {
+    
+            throw next(new Error('Empresa não encontrada!'));
+        }
+
+        let credencial = result_empresa.recordset[0].CPEM_CREDENCIAL;
+        let chave = result_empresa.recordset[0].CPEM_CHAVE;
+
+    })()
+    .then(resp => console.log(resp))
+    .catch(err => console.log(err));
+
+    var config = {
+        method: 'post',
+        url: `https://sandbox.pjbank.com.br/contadigital/${credencial}/documentos`,
+        headers: { 
+            'X-CHAVE-CONTA': `${chave}`, 
+            ...data.getHeaders()
+        },
+        data : data
+    };
+
+    axios(config)
+    .then(function (response) {
+        console.log(JSON.stringify(response.data));
+    })
+    .catch(function (error) {
+        console.log(error);
+    });
+
+});
+
 
 module.exports = router;

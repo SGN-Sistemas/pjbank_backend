@@ -4,7 +4,7 @@
         "servidor": "192.168.102.195",
         "porta": "1433",
         "banco": "TESTE_PJBANK",
-        "usuario": "sa",
-        "senha": "sgn123"
+        "usuario": "INTSGN",
+        "senha": "INSGTN"
     }
 }

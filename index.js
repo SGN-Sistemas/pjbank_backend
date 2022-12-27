@@ -18,8 +18,8 @@ app.use((error, req, res, next) => {
     
 });
 
-app.listen(65532, () => {
+app.listen(9000, () => {
 
-     console.log("Servidor rodando na porta 65532...");
+     console.log("Servidor rodando na porta 9000...");
 })
 

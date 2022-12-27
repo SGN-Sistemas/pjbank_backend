@@ -63,7 +63,7 @@ router.post('/pix/pagamento', (req, res, next) => {
           })
           .catch(function (error) {
                 console.log(error.response.data);
-                res.json(error.response.data);
+                throw next(new Error(error.response.data.msg));
           });
 
     })()
