@@ -101,11 +101,13 @@ router.post('/conta', async (req, res, next) => {
 
 });
 
-
 router.post('/conta/documentos', async (req, res, next) => {
 
-    data.append('arquivos', fs.createReadStream('/path/to/file'));
+    data.append('arquivos', fs.createReadStream('/home/matheus/Vídeos/programa_nivelamento_ulife.pdf'));
     data.append('tipo', 'contratosocial');
+
+    let credencial;
+    let chave;
 
     let empresa_cod = req.query.empresa;
 
@@ -118,32 +120,62 @@ router.post('/conta/documentos', async (req, res, next) => {
             throw next(new Error('Empresa não encontrada!'));
         }
 
-        let credencial = result_empresa.recordset[0].CPEM_CREDENCIAL;
-        let chave = result_empresa.recordset[0].CPEM_CHAVE;
+        credencial = result_empresa.recordset[0].CPEM_CREDENCIAL;
+        chave = result_empresa.recordset[0].CPEM_CHAVE;
+
+        console.log(credencial);
+        console.log(chave);
+
+        conta.addDocumentoContaDigital(credencial, chave, data)
+        .then(function (response) {
+            console.log(JSON.stringify(response.data));
+            res.json(response.data);
+        })
+        .catch(function (error) {
+            console.log(error.response.data);
+            res.json(error.response.data);
+        });
 
     })()
     .then(resp => console.log(resp))
     .catch(err => console.log(err));
 
-    var config = {
-        method: 'post',
-        url: `https://sandbox.pjbank.com.br/contadigital/${credencial}/documentos`,
-        headers: { 
-            'X-CHAVE-CONTA': `${chave}`, 
-            ...data.getHeaders()
-        },
-        data : data
-    };
-
-    axios(config)
-    .then(function (response) {
-        console.log(JSON.stringify(response.data));
-    })
-    .catch(function (error) {
-        console.log(error);
-    });
-
 });
 
+router.post('/conta/administrador', async (req, res, next) => {
+
+    let credencial;
+    let chave;
+
+    let empresa_cod = req.query.empresa;
+    let email = req.query.email;
+
+    (async () => {
+
+        const result_empresa = await querys.selectCredencialEmpresa(empresa_cod);
+
+        if (result_empresa.rowsAffected <= 0) {
+    
+            throw next(new Error('Empresa não encontrada!'));
+        }
+
+        credencial = result_empresa.recordset[0].CPEM_CREDENCIAL;
+        chave = result_empresa.recordset[0].CPEM_CHAVE;
+
+        conta.addPessoaAdminContaDigital(credencial, chave, email)
+       .then(function (response) {
+            console.log(JSON.stringify(response.data));
+            res.json(response.data);
+        })
+        .catch(function (error) {
+            console.log(error.response.data);
+            res.json(error.response.data);
+        });
+
+    })()
+    .then(resp => console.log(resp))
+    .catch(err => console.log(err));
+
+});
 
 module.exports = router;

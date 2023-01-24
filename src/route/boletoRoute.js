@@ -11,6 +11,7 @@ const operacoes_boletos = require('../../http/gerar_boleto');
 const config_conexao = require('../db/config_conexao');
 const querys = require('../query/index');
 const utilitarios = require('../utilitarios/verificaExisteEmpresaIgual');
+const download_pdf = require('../utilitarios/download_pdf.js');
 
 const router = express.Router();
 
@@ -25,6 +26,9 @@ router.post('/boleto', (req, res, next) => {
 
       let codigos = req.body.parcelas;
       let email_req = req.body.email;
+
+      // Boleto, pix ou Pix e Boleto
+      let forma_pagamento = req.body.forma;
 
       console.log(codigos);
       console.log(email_req);
@@ -49,6 +53,9 @@ router.post('/boleto', (req, res, next) => {
 
                               let cliente_cod = dados_cobranca.recordset[0].CLIE_TIPO_COD;
                               let empresa_cod = dados_cobranca.recordset[0].TRRC_EMPR_COD;
+
+                              console.log(cliente_cod);
+                              console.log(empresa_cod);
 
                               const result_empresa = await querys.selectCredencialEmpresa(empresa_cod);
                               console.log(result_empresa.recordset[0].CPEM_CREDENCIAL);
@@ -110,6 +117,7 @@ router.post('/boleto', (req, res, next) => {
                                           "pedido_numero": parcela.TRPR_COD,
                                           "webhook": url_webhook,
                                           "texto": parcela.TRPR_OBS,
+                                          "pix": forma_pagamento,
                                           "instrucoes": "Este é um boleto de exemplo",
                                           "instrucao_adicional": "\n- Este boleto não deve ser pago pois é um exemplo"
                                     }
@@ -197,18 +205,28 @@ router.post('/boleto', (req, res, next) => {
                                                             querys.atualizaBoletoBanco(dados);
                                                             console.log("Não é array");
                                                 }
+
+                                          }else{
+
+                                               console.log("Não entrou no if de dados");
                                           }
 
                                           obj_result.erro = [];
 
                                           res.json(obj_result);
 
-                                          obj_result.boleto.forEach(
-                                                      (pos, i) => {
-                                                            download(pos.link, `boleto${i}.pdf`)
+                                          obj_result.boleto.forEach(async (ele) => {
 
-                                                      }
-                                          )
+                                                download_pdf.downloadPdf(ele.link, '/home/matheus/Matheus - Projetos PJbank/Backend-pjbank/pjbank_backend/downloads', '');
+
+                                          });
+
+                                          // obj_result.boleto.forEach(
+                                          //             (pos, i) => {
+                                          //                   download(pos.link, `boleto${i}.pdf`)
+
+                                          //             }
+                                          // )
 
                                     })
                                     .catch(function (error) {
@@ -294,6 +312,7 @@ router.post('/boleto', (req, res, next) => {
                                           "pedido_numero": parcela.TRPR_COD ? parcela.TRPR_COD : "",
                                           "webhook": url_webhook ? url_webhook : "",
                                           "texto": parcela.TRPR_OBS ? parcela.TRPR_OBS : "",
+                                          "pix": forma_pagamento,
                                           "instrucoes": "Este é um boleto de exemplo",
                                           "instrucao_adicional": "\n- Este boleto não deve ser pago pois é um exemplo"
                                     }
@@ -385,33 +404,35 @@ router.post('/boleto', (req, res, next) => {
                                                                   let i = 1;
 
 
-                                                                  // obj_result.boleto.forEach(async (ele) => {
+                                                                  obj_result.boleto.forEach(async (ele) => {
 
-                                                                  //       console.log(ele.link)
+                                                                        download_pdf.downloadPdf(ele.link, '/home/matheus/Matheus - Projetos PJbank/Backend-pjbank/pjbank_backend/downloads', '');
 
-                                                                  //       let nome_arquivo = "Sem_nome_"+i;
+                                                                        // console.log(ele.link)
 
-                                                                  //       console.log(nome_arquivo);
+                                                                        // let nome_arquivo = "Sem_nome_"+i;
 
-                                                                  //       const downloader = new Downloader({
-                                                                  //             url: ele.link, 
-                                                                  //             directory: "./downloads", 
-                                                                  //             fileName: nome_arquivo
-                                                                  //        });
+                                                                        // console.log(nome_arquivo);
 
-                                                                  //           try {
-                                                                  //             const {filePath,downloadStatus} = await downloader.download(); 
+                                                                        // const downloader = new Downloader({
+                                                                        //       url: ele.link, 
+                                                                        //       directory: "./downloads", 
+                                                                        //       fileName: nome_arquivo
+                                                                        //  });
 
-                                                                  //             i = i + 1;
-                                                                  //             console.log("All done");
+                                                                        //     try {
+                                                                        //       const {filePath,downloadStatus} = await downloader.download(); 
 
-                                                                  //           } catch (error) {
+                                                                        //       i = i + 1;
+                                                                        //       console.log("All done");
 
-                                                                  //             console.log("Download failed", error);
-                                                                  //           }
+                                                                        //     } catch (error) {
+
+                                                                        //       console.log("Download failed", error);
+                                                                        //     }
 
 
-                                                                  // });
+                                                                  });
 
                                                                   res.json(obj_result);
                                                             } else {

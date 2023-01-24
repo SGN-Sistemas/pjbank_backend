@@ -11,6 +11,10 @@ app.use('/', require('./src/route/boletoRoute'));
 app.use('/', require('./src/route/contaDigitalRoute'));
 app.use('/', require('./src/route/webHookRouter'));
 app.use('/', require('./src/route/pixRoute'));
+
+app.get('/', (req, res) => {
+     app.status(200).json({status: "Funcionando!"});
+});
  
 app.use((error, req, res, next) => {
 
@@ -19,7 +23,6 @@ app.use((error, req, res, next) => {
 });
 
 app.listen(9000, () => {
-
      console.log("Servidor rodando na porta 9000...");
 })
 

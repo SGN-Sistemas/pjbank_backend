@@ -30,29 +30,23 @@ function criarContaDigital(dadosEmpresa){
         return axios(config);
 }
 
-function addPessoaAdminContaDigital(){
+function addPessoaAdminContaDigital(credencial, chave, email){
 
         var data = JSON.stringify({
-            "email": "matheus.pimentel@sgnsistemas.com.br"
+            "email": `${email}`
         });
         
         var config = {
             method: 'post',
-            url: 'https://sandbox.pjbank.com.br/contadigital/f81254c1324447552e77dd306201c1f3c723e1c0/administradores',
+            url: `https://sandbox.pjbank.com.br/contadigital/${credencial}/administradores`,
             headers: { 
-            'X-CHAVE-CONTA': 'e0bdd68a9fe7047367d9cc693e5e2482886a6549', 
+            'X-CHAVE-CONTA': `${chave}`, 
             'Content-Type': 'application/json'
             },
             data : data
         };
         
-        axios(config)
-        .then(function (response) {
-            console.log(JSON.stringify(response.data));
-        })
-        .catch(function (error) {
-            console.log(error);
-        });
+        return axios(config);
 }
 
 function addSaldoContaDigital(){
@@ -251,4 +245,31 @@ function extraRecebimentosEfetivamentePagos(){
         });
 }
 
-module.exports = {criarContaDigital, extrato_recebimentos, extraRecebimentosEfetivamentePagos , addPessoaAdminContaDigital, addSaldoContaDigital, addPagamentosContaDigital, listaAdminContaDigital, infoContaDigital, deletarPessoaContaDigital, statusCossioConta, pagamentoComPix};
+function addDocumentoContaDigital(credencial, chave, data){
+
+    var config = {
+        method: 'post',
+        url: `https://sandbox.pjbank.com.br/contadigital/${credencial}/documentos`,
+        headers: { 
+            'X-CHAVE-CONTA': `${chave}`, 
+            ...data.getHeaders()
+        },
+        data : data
+    };
+
+    return axios(config);
+}
+
+module.exports = {  criarContaDigital,
+                    extrato_recebimentos,
+                    extraRecebimentosEfetivamentePagos , 
+                    addPessoaAdminContaDigital,
+                    addSaldoContaDigital,
+                    addPagamentosContaDigital,
+                    listaAdminContaDigital, 
+                    infoContaDigital,
+                    deletarPessoaContaDigital,
+                    statusCossioConta, 
+                    pagamentoComPix,
+                    addDocumentoContaDigital
+                };
