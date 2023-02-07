@@ -1,7 +1,7 @@
 
 var axios = require('axios');
 
-function credenciarContaRecebimento(){
+function credenciarContaRecebimento(dadosEmpresa){
 
         var data = JSON.stringify({
             "nome_empresa": "Empresa de Exemplo",
@@ -31,13 +31,7 @@ function credenciarContaRecebimento(){
                 data : data
         };
 
-        axios(config)
-        .then(function (response) {
-            console.log(JSON.stringify(response.data));
-        })
-        .catch(function (error) {
-            console.log(error);
-        });
+        return axios(config);
 }
 
 function infoCredencial(){

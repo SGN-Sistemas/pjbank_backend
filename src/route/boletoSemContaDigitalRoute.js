@@ -13,6 +13,7 @@ const querys = require('../query/index');
 const utilitarios = require('../utilitarios/verificaExisteEmpresaIgual');
 const download_pdf = require('../utilitarios/download_pdf.js');
 const { json } = require('body-parser');
+const { HttpProxy } = require('vite');
 
 const router = express.Router();
 
@@ -23,7 +24,7 @@ let obj_result = {};
 let credencial;
 let email_cliente;
 
-router.post('/boleto', (req, res, next) => {
+router.post('/boleto_recebimento', (req, res, next) => {
 
       let codigos = req.body.parcelas;
       let email_req = req.body.email;
@@ -65,11 +66,11 @@ router.post('/boleto', (req, res, next) => {
                               let url_logo = result_empresa.recordset[0].CPEM_URL_LOGO;
 
                               const exists_boletos = await sql.query`SELECT
-                                                                              BCPJ_COD
-                                                                        FROM
-                                                                              BOLETO_COBRANCA_PJBANK
-                                                                        WHERE
-                                                                              BCPJ_PEDIDO_NUMERO IN (${codigos})`;
+                                                                            BCPJ_COD
+                                                                     FROM
+                                                                            BOLETO_COBRANCA_PJBANK
+                                                                     WHERE
+                                                                            BCPJ_PEDIDO_NUMERO IN (${codigos})`;
                               console.log(exists_boletos);
                               dados_parcela = [...dados_cobranca.recordset];
 
@@ -98,29 +99,33 @@ router.post('/boleto', (req, res, next) => {
                                     data_formatada = datas.getFormatDate(parcela.TRPR_DTVENC);
 
                                     let obj = {
+
                                           "vencimento": data_formatada,
                                           "valor": parcela.TRPR_VALPREV,
                                           "juros": parcela.TRPR_VALJUR,
+                                          "juros_fixo": parcela.TRPR_VALJUR,
                                           "multa": parcela.TRPR_VALMULTA,
-                                          "desconto": parcela.TRPR_VALDESC,
+                                          "multa_fixo": parcela.TRPR_VALMULTA,
                                           "nome_cliente": nome_cliente,
+                                          "email_cliente": "exemplo@hotmail.com",
+                                          "telefone_cliente": "1940096830",
                                           "cpf_cliente": cpf_cliente,
                                           "endereco_cliente": endereco_cliente,
                                           "numero_cliente": "509",
-                                          "complemento_cliente": "",
                                           "bairro_cliente": bairro_cliente,
                                           "cidade_cliente": cidade_cliente,
                                           "estado_cliente": uf_cliente,
                                           "cep_cliente": cep_cliente,
                                           "logo_url": (url_logo) ? url_logo : "",
-                                          "texto": "Texto padrão personalizavel",
-                                          "grupo": "Boletos",
-                                          "pedido_numero": parcela.TRPR_COD,
-                                          "webhook": url_webhook,
                                           "texto": parcela.TRPR_OBS,
-                                          "pix": forma_pagamento,
                                           "instrucoes": "Este é um boleto de exemplo",
-                                          "instrucao_adicional": "\n- Este boleto não deve ser pago pois é um exemplo"
+                                          "instrucao_adicional": "\n- Este boleto não deve ser pago pois é um exemplo",
+                                          "grupo": "Boletos",
+                                          "webhook": url_webhook,
+                                          "pedido_numero": parcela.TRPR_COD,
+                                          "especie_documento": "DS",
+                                          "pix": forma_pagamento
+
                                     }
                                     return obj;
                               });
@@ -135,7 +140,7 @@ router.post('/boleto', (req, res, next) => {
 
                               var config = {
                                     method: 'post',
-                                    url: `https://sandbox.pjbank.com.br/contadigital/${credencial}/recebimentos/transacoes`,
+                                    url: `https://sandbox.pjbank.com.br/recebimentos/${credencial}/transacoes`,
                                     headers: {
                                           'Content-Type': 'application/json'
                                     },
@@ -144,6 +149,8 @@ router.post('/boleto', (req, res, next) => {
 
                               axios(config)
                                     .then(async function (response) {
+
+                                        console.log(response);
 
                                           let dados = null;
                                           console.log('teste');
@@ -222,7 +229,6 @@ router.post('/boleto', (req, res, next) => {
 
                                     })
                                     .catch(function (error) {
-                                          //throw next(new Error("Problema na requisição!"));
                                           res.json(error);
                                           console.log(error);
                                     });
@@ -285,29 +291,33 @@ router.post('/boleto', (req, res, next) => {
                                     data_formatada = datas.getFormatDate(parcela.TRPR_DTVENC);
 
                                     let obj = {
+
                                           "vencimento": data_formatada ? data_formatada : "",
                                           "valor": parcela.TRPR_VALPREV ? parcela.TRPR_VALPREV : "",
                                           "juros": parcela.TRPR_VALJUR ? parcela.TRPR_VALJUR : "",
+                                          "juros_fixo": parcela.TRPR_VALJUR ? parcela.TRPR_VALJUR : "",
                                           "multa": parcela.TRPR_VALMULTA ? parcela.TRPR_VALMULTA : "",
-                                          "desconto": parcela.TRPR_VALDESC ? parcela.TRPR_VALDESC : "",
+                                          "multa_fixo": parcela.TRPR_VALMULTA ? parcela.TRPR_VALMULTA : "",
                                           "nome_cliente": nome_cliente ? nome_cliente : "",
+                                          "email_cliente": "exemplo@hotmail.com" ? "exemplo@hotmail.com" : "",
+                                          "telefone_cliente": "1940096830" ? "1940096830" : "",
                                           "cpf_cliente": cpf_cliente ? cpf_cliente : "",
                                           "endereco_cliente": endereco_cliente ? endereco_cliente : "",
                                           "numero_cliente": "509",
-                                          "complemento_cliente": "",
                                           "bairro_cliente": bairro_cliente ? bairro_cliente : "",
                                           "cidade_cliente": cidade_cliente ? cidade_cliente : "",
                                           "estado_cliente": uf_cliente ? uf_cliente : "",
                                           "cep_cliente": cep_cliente ? cep_cliente : "",
                                           "logo_url": (url_logo) ? url_logo : "",
-                                          "texto": "Texto padrão personalizavel",
-                                          "grupo": "Boletos",
-                                          "pedido_numero": parcela.TRPR_COD ? parcela.TRPR_COD : "",
-                                          "webhook": url_webhook ? url_webhook : "",
                                           "texto": parcela.TRPR_OBS ? parcela.TRPR_OBS : "",
-                                          "pix": forma_pagamento,
                                           "instrucoes": "Este é um boleto de exemplo",
-                                          "instrucao_adicional": "\n- Este boleto não deve ser pago pois é um exemplo"
+                                          "instrucao_adicional": "\n- Este boleto não deve ser pago pois é um exemplo",
+                                          "grupo": "Boletos",
+                                          "webhook": url_webhook ? url_webhook : "",
+                                          "pedido_numero": parcela.TRPR_COD ? parcela.TRPR_COD : "",
+                                          "especie_documento": "DS",
+                                          "pix": forma_pagamento
+                                          
                                     }
                                     return obj;
                               });
@@ -327,7 +337,7 @@ router.post('/boleto', (req, res, next) => {
 
                                                 var config = {
                                                       method: 'post',
-                                                      url: `https://sandbox.pjbank.com.br/contadigital/${credencial}/recebimentos/transacoes`,
+                                                      url: `https://sandbox.pjbank.com.br/recebimentos/${credencial}/transacoes`,
                                                       headers: {
                                                             'Content-Type': 'application/json'
                                                       },
@@ -407,9 +417,9 @@ router.post('/boleto', (req, res, next) => {
                                                             } else {
                                                                   throw next(new Error("Problema na requisição!"));
                                                             }
+
                                                       })
                                                       .catch(function (error) {
-                                                            //throw next(new Error("Problema na requisição!"));
                                                             res.json(error);
                                                             console.log(error);
                                                       });
@@ -422,15 +432,13 @@ router.post('/boleto', (req, res, next) => {
                   } catch (err) {
                         console.log(err);
                         res.json(err);
-                        //throw next(new Error("Problema na requisição!"));
                   }
             })()
 
       })()
 });
 
-
-router.get('/boleto', (req, res, next) => {
+router.get('/boleto_reebimento', (req, res, next) => {
 
             let pedido_numero = req.query.pedido;
             let empresa_cod = req.query.empresa;
@@ -453,6 +461,7 @@ router.get('/boleto', (req, res, next) => {
 
                   if(result_id_unico.rowsAffected <= 0){
                         throw next(new Error("Não foi encontrado o boleto de cobrança para este número de pedido!"));
+                        
                   }
 
                   let id_unico = result_id_unico.recordset[0].BCPJ_ID_UNICO;
@@ -466,7 +475,6 @@ router.get('/boleto', (req, res, next) => {
                   .catch(function (error) {
                         console.log(error);
                         res.json(error);
-                        //throw next(new Error(error));
                   });
 
              })()
@@ -475,161 +483,81 @@ router.get('/boleto', (req, res, next) => {
 
 });
 
-router.get('/boleto/lote', (req, res, next) => {
+router.post('/boleto_recebimento/lote', (req, res, next) => {
 
-      let pedido_numero = req.query.pedido.split('-');
-      let empresa_cod = req.query.empresa;
+    let pedido_numero = req.query.pedido.split('-');
+    let empresa_cod = req.query.empresa;
 
-      (async () => {
+    (async () => {
 
-            await sql.connect(config_conexao.sqlConfig);
+          await sql.connect(config_conexao.sqlConfig);
 
-            const result_empresa = await querys.selectCredencialEmpresa(empresa_cod);
+          const result_empresa = await querys.selectCredencialEmpresa(empresa_cod);
 
-            if(result_empresa.rowsAffected <= 0){
-                 throw next(new Error("Sem dados das credenciais dessa empresa!"));
-            }
+          if(result_empresa.rowsAffected <= 0){
+               throw next(new Error("Sem dados das credenciais dessa empresa!"));
+          }
 
-            let credencial = result_empresa.recordset[0].CPEM_CREDENCIAL;
-            let chave = result_empresa.recordset[0].CPEM_CHAVE;
-            const dadosCobranca = await querys.getBoletoCobrancaPjBank(pedido_numero);
+          let credencial = result_empresa.recordset[0].CPEM_CREDENCIAL;
+          let chave = result_empresa.recordset[0].CPEM_CHAVE;
+          const dadosCobranca = await querys.getBoletoCobrancaPjBank(pedido_numero);
 
-            console.log(dadosCobranca);
+          console.log(dadosCobranca);
 
-            if(dadosCobranca.rowsAffected <= 0){
-                  throw next(new Error("Não foi encontrado o boleto de cobrança para estes números de pedido!"));
-            }
+          if(dadosCobranca.rowsAffected <= 0){
+                throw next(new Error("Não foi encontrado o boleto de cobrança para estes números de pedido!"));
+          }
 
-            let numeros_pedidos = dadosCobranca.recordset.map(item => item.BCPJ_PEDIDO_NUMERO);
+          let numeros_pedidos = dadosCobranca.recordset.map(item => item.BCPJ_PEDIDO_NUMERO);
 
-            operacoes_boletos.impressaoBoletosLote(credencial, chave, numeros_pedidos)
-            .then(function (response) {
-                  console.log(JSON.stringify(response.data));
-                  res.json(response.data);
-            })
-            .catch(function (error) {
-                  console.log(error);
-                  res.json(error);
-                  //throw next(new Error(error));
-            });
+          operacoes_boletos.impressaoBoletosLoteSemContaDigital(credencial, chave, numeros_pedidos)
+          .then(function (response) {
+                console.log(JSON.stringify(response.data));
+                res.json(response.data);
+          })
+          .catch(function (error) {
+                console.log('entrou no catch');
+                console.log(error.response.data);
+                res.json(error.response.data);
+          });
 
-      })()
-      .then(resp => console.log(resp))
-      .catch(err => err);
-
-});
-
-router.get('/boleto/filtros', (req, res, next) => {
-
-      let empresa_cod = req.query.empresa;
-      let data_inicio = req.query.data_inicio.replaceAll('-', '/');
-      let data_fim = req.query.data_fim.replaceAll('-', '/');
-      let pagina = 1;
-      let pago = req.query.pago;
-
-      (async () => {
-
-            await sql.connect(config_conexao.sqlConfig);
-
-            const result_empresa = await querys.selectCredencialEmpresa(empresa_cod);
-
-            if(result_empresa.rowsAffected <= 0){
-                  throw next(new Error("Sem dados das credenciais dessa empresa!"));
-            }
-
-            let credencial = result_empresa.recordset[0].CPEM_CREDENCIAL;
-            let chave = result_empresa.recordset[0].CPEM_CHAVE;
-
-            operacoes_boletos.consultaBoletosRecebimentosFiltros(credencial, chave, data_inicio, data_fim, pagina, pago)
-            .then(function (response) {
-                   console.log(JSON.stringify(response.data));
-                   res.json(response.data);
-             })
-            .catch(function (error) {
-                   console.log(error);
-                   res.json(error);
-                  //  throw next(new Error(error));
-            });
-      })()
-      .then(resp => console.log(resp))
-      .catch(err => console.log(err));
+    })()
+    .then(resp => console.log(resp))
+    .catch(err => err);
 
 });
 
-router.get('/boleto/pagamentos/filtros', (req, res, next) => {
+router.delete('/boleto_recebimento', (req, res, next) => {
 
-      let empresa_cod = req.query.empresa;
-      let data_inicio = req.query.data_inicio.replaceAll('-', '/');
-      let data_fim = req.query.data_fim.replaceAll('-', '/');
-      let status = req.query.status;
-      let pagina = 1;
-      let itensPorPagina = 50;
+    let pedido_numero = req.query.pedido;
+    let empresa_cod = req.query.empresa;
 
-      console.log(data_inicio);
-      console.log(data_fim);
+    (async () => {
 
-      (async () => {
+          await sql.connect(config_conexao.sqlConfig);
 
-            await sql.connect(config_conexao.sqlConfig);
+          const result_empresa = await querys.selectCredencialEmpresa(empresa_cod);
 
-            const result_empresa = await querys.selectCredencialEmpresa(empresa_cod);
+          if(result_empresa.rowsAffected <= 0){
+                throw next(new Error("Sem dados das credenciais dessa empresa!"));
+          }
 
-            if(result_empresa.rowsAffected <= 0){
-                  throw next(new Error("Sem dados das credenciais dessa empresa!"));
-            }
+          let credencial = result_empresa.recordset[0].CPEM_CREDENCIAL;
+          let chave = result_empresa.recordset[0].CPEM_CHAVE;
 
-            let credencial = result_empresa.recordset[0].CPEM_CREDENCIAL;
-            let chave = result_empresa.recordset[0].CPEM_CHAVE;
+          operacoes_boletos.invalidarBoletoSemContaVirtual(credencial, chave, pedido_numero)
+          .then(function (response) {
+                console.log(JSON.stringify(response.data));
+                res.json(response.data);
+          })
+          .catch(function (error) {
+                console.log(error);
+                res.json(error);
+          });
 
-            operacoes_boletos.consultaBoletosPagamentosFiltros(credencial, chave, data_inicio, data_fim, pagina, itensPorPagina, status)
-            .then(function (response) {
-                  console.log(JSON.stringify(response.data));
-                  res.json(response.data);
-            })
-            .catch(function (error) {
-                  console.log(error);
-                  res.json(error);
-                  // throw next(new Error(error));
-            });
-
-      })()
-      .then(resp => console.log(resp))
-      .catch(err => console.log(err));
-
-});
-
-router.delete('/boleto', (req, res, next) => {
-
-      let pedido_numero = req.query.pedido;
-      let empresa_cod = req.query.empresa;
-
-      (async () => {
-
-            await sql.connect(config_conexao.sqlConfig);
-
-            const result_empresa = await querys.selectCredencialEmpresa(empresa_cod);
-
-            if(result_empresa.rowsAffected <= 0){
-                  throw next(new Error("Sem dados das credenciais dessa empresa!"));
-            }
-
-            let credencial = result_empresa.recordset[0].CPEM_CREDENCIAL;
-            let chave = result_empresa.recordset[0].CPEM_CHAVE;
-
-            operacoes_boletos.invalidarBoleto(credencial, chave, pedido_numero)
-            .then(function (response) {
-                  console.log(JSON.stringify(response.data));
-                  res.json(response.data);
-            })
-            .catch(function (error) {
-                  console.log(error);
-                  res.json(error);
-                  //throw next(new Error(error));
-            });
-
-      })()
-      .then(resp => console.log(resp))
-      .catch(err => console.log(err));
+    })()
+    .then(resp => console.log(resp))
+    .catch(err => console.log(err));
 
 });
 

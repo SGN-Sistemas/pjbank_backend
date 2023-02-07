@@ -20,7 +20,7 @@ function criarContaDigital(dadosEmpresa){
 
         var config = {
             method: 'post',
-            url: 'https://sandbox.pjbank.com.br/contadigital',
+            url: 'https://api.pjbank.com.br/contadigital',
             headers: { 
                 'Content-Type': 'application/json'
             },
@@ -28,6 +28,42 @@ function criarContaDigital(dadosEmpresa){
         };
 
         return axios(config);
+}
+
+function criarCredencialContaRecebimento(dadosEmpresa){
+     
+    var data = JSON.stringify({
+
+        "nome_empresa": dadosEmpresa.nome_empresa,
+        "conta_repasse": dadosEmpresa.conta_repasse,
+        "agencia_repasse": dadosEmpresa.agencia_repasse,
+        "banco_repasse": dadosEmpresa.banco_repasse,
+        "cnpj": dadosEmpresa.cnpj,
+        "ddd": dadosEmpresa.ddd,
+        "telefone": dadosEmpresa.telefone,
+        "email": dadosEmpresa.email,
+        "endereco": dadosEmpresa.endereco,
+        "bairro": dadosEmpresa.bairro,
+        "cidade": dadosEmpresa.cidade,
+        "estado": dadosEmpresa.estado,
+        "cep": dadosEmpresa.cep,
+        "agencia": dadosEmpresa.agencia
+
+    });
+
+    console.log(data);
+
+    var config = {
+        method: 'post',
+        url: 'https://sandbox.pjbank.com.br/recebimentos',
+        headers: { 
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+        },
+        data : data
+    };
+
+    return axios(config);
 }
 
 function addPessoaAdminContaDigital(credencial, chave, email){
@@ -38,7 +74,7 @@ function addPessoaAdminContaDigital(credencial, chave, email){
         
         var config = {
             method: 'post',
-            url: `https://sandbox.pjbank.com.br/contadigital/${credencial}/administradores`,
+            url: `https://api.pjbank.com.br/contadigital/${credencial}/administradores`,
             headers: { 
             'X-CHAVE-CONTA': `${chave}`, 
             'Content-Type': 'application/json'
@@ -57,7 +93,7 @@ function addSaldoContaDigital(){
 
         var config = {
           method: 'post',
-          url: 'https://sandbox.pjbank.com.br/contadigital/f81254c1324447552e77dd306201c1f3c723e1c0',
+          url: 'https://api.pjbank.com.br/contadigital/f81254c1324447552e77dd306201c1f3c723e1c0',
           headers: { 
             'X-CHAVE-CONTA': 'e0bdd68a9fe7047367d9cc693e5e2482886a6549', 
             'Content-Type': 'application/json'
@@ -76,7 +112,6 @@ function addSaldoContaDigital(){
 
 function addPagamentosContaDigital(){
 
-
          var config = {
             method: 'get',
             url: 'https://api.pjbank.com.br/contadigital/f81254c1324447552e77dd306201c1f3c723e1c0/pagamentos?data_inicio=08/26/2022&data_fim=08/30/2022&itensporpagina=50&status=realizadas',
@@ -92,8 +127,6 @@ function addPagamentosContaDigital(){
         .catch(function (error) {
             console.log(error);
         });
-
-      
 }
 
 function listaAdminContaDigital(){
@@ -119,7 +152,7 @@ function infoContaDigital(credencial, chave){
 
         var config = {
           method: 'get',
-          url: `https://sandbox.pjbank.com.br/contadigital/${credencial}`,
+          url: `https://api.pjbank.com.br/contadigital/${credencial}`,
           headers: { 
             'X-CHAVE-CONTA': `${chave}`
           }
@@ -135,7 +168,7 @@ function deletarPessoaContaDigital(pessoa_email){
 
         var config = {
             method: 'delete',
-            url: 'https://sandbox.pjbank.com.br/contadigital/f81254c1324447552e77dd306201c1f3c723e1c0/administradores/'+pessoa_email,
+            url: 'https://api.pjbank.com.br/contadigital/f81254c1324447552e77dd306201c1f3c723e1c0/administradores/'+pessoa_email,
             headers: { 
                 'X-CHAVE-CONTA': 'e0bdd68a9fe7047367d9cc693e5e2482886a6549'
             },
@@ -155,7 +188,7 @@ function statusCossioConta(pessoa_email){
 
     var config = {
         method: 'get',
-        url: 'https://sandbox.pjbank.com.br/contadigital/f81254c1324447552e77dd306201c1f3c723e1c0/administradores/' + pessoa_email,
+        url: 'https://api.pjbank.com.br/contadigital/f81254c1324447552e77dd306201c1f3c723e1c0/administradores/' + pessoa_email,
         headers: { 
             'X-CHAVE-CONTA': 'e0bdd68a9fe7047367d9cc693e5e2482886a6549'
         }
@@ -189,7 +222,7 @@ function pagamentoComPix(pix, tipo_pix){
 
         var config = {
             method: 'post',
-            url: 'https://sandbox.pjbank.com.br/contadigital/f81254c1324447552e77dd306201c1f3c723e1c0/transacoes',
+            url: 'https://api.pjbank.com.br/contadigital/f81254c1324447552e77dd306201c1f3c723e1c0/transacoes',
             headers: { 
                 'X-CHAVE-CONTA': 'e0bdd68a9fe7047367d9cc693e5e2482886a6549', 
                 'Content-Type': 'application/json'
@@ -210,7 +243,7 @@ function extrato_recebimentos(){
 
         var config = {
             method: 'get',
-            url: 'https://sandbox.pjbank.com.br/contadigital/f81254c1324447552e77dd306201c1f3c723e1c0/recebimentos/transacoes',
+            url: 'https://api.pjbank.com.br/contadigital/f81254c1324447552e77dd306201c1f3c723e1c0/recebimentos/transacoes',
             headers: { 
                 'X-CHAVE-CONTA': 'e0bdd68a9fe7047367d9cc693e5e2482886a6549'
             }
@@ -229,7 +262,7 @@ function extraRecebimentosEfetivamentePagos(){
 
         var config = {
         method: 'get',
-        url: 'https://sandbox.pjbank.com.br/contadigital/f81254c1324447552e77dd306201c1f3c723e1c0/recebimentos/transacoes?pago=1',
+        url: 'https://api.pjbank.com.br/contadigital/f81254c1324447552e77dd306201c1f3c723e1c0/recebimentos/transacoes?pago=1',
         headers: { 
             'X-CHAVE-CONTA': 'e0bdd68a9fe7047367d9cc693e5e2482886a6549', 
             'Content-Type': 'application/json'
@@ -249,7 +282,7 @@ function addDocumentoContaDigital(credencial, chave, data){
 
     var config = {
         method: 'post',
-        url: `https://sandbox.pjbank.com.br/contadigital/${credencial}/documentos`,
+        url: `https://api.pjbank.com.br/contadigital/${credencial}/documentos`,
         headers: { 
             'X-CHAVE-CONTA': `${chave}`, 
             ...data.getHeaders()
@@ -271,5 +304,6 @@ module.exports = {  criarContaDigital,
                     deletarPessoaContaDigital,
                     statusCossioConta, 
                     pagamentoComPix,
-                    addDocumentoContaDigital
+                    addDocumentoContaDigital,
+                    criarCredencialContaRecebimento
                 };

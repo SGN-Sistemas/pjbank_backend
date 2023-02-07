@@ -64,7 +64,7 @@ router.post('/conta', async (req, res, next) => {
         "ddd": "19",
         "telefone": limpaMascaras.limpaMascaraTelefone(empresa.recordset[0].EMPR_FONE),
         "email": empresa.recordset[0].EMPR_EMAIL,
-        "webhook": "http://example.com.br"
+        "webhook": "http://129.148.50.73:9000/webhook"
     };
 
     let credencial_obj = {};

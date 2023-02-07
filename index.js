@@ -11,15 +11,16 @@ app.use('/', require('./src/route/boletoRoute'));
 app.use('/', require('./src/route/contaDigitalRoute'));
 app.use('/', require('./src/route/webHookRouter'));
 app.use('/', require('./src/route/pixRoute'));
+app.use('/', require('./src/route/contaRecebimento'));
+app.use('/', require('./src/route/boletoSemContaDigitalRoute.js'));
 
 app.get('/', (req, res) => {
-     app.status(200).json({status: "Funcionando!"});
+     res.status(200).json({status: "Funcionando!"});
 });
  
 app.use((error, req, res, next) => {
 
      res.status(500).json({status: 500, message: error.message});
-    
 });
 
 app.listen(9000, () => {

@@ -20,6 +20,7 @@ function extrato_recebimentos(){
 }
 
 function extrato_recebidos_efetivados(){
+
     var config = {
         method: 'get',
         url: 'https://sandbox.pjbank.com.br/contadigital/f81254c1324447552e77dd306201c1f3c723e1c0/recebimentos/transacoes?pago=1',
@@ -55,6 +56,7 @@ function extrato_recebimento_filtro_data(data_inicio, data_fim){
     .catch(function (error) {
         console.log(error);
     });
+    
 }
 
 module.exports = {extrato_recebimentos, extrato_recebidos_efetivados, extrato_recebimento_filtro_data};

@@ -2,7 +2,6 @@ const sql = require('mssql');
 const configBanco = require('../db/config_conexao');
 const boletos = require('../../http/gerar_boleto');
 
-
 const selectCredencialEmpresa = async (empresa) => {
 
   try {
@@ -12,7 +11,9 @@ const selectCredencialEmpresa = async (empresa) => {
                                                 CPEM_CREDENCIAL,
                                                 CPEM_URL_WEBHOOK,
                                                 CPEM_URL_LOGO,
-                                                CPEM_CHAVE
+                                                CPEM_CHAVE,
+                                                CPEM_CONTA_VIRTUAL,
+                                                CPEM_AGENCIA_VIRTUAL
                                         FROM
                                                 CREDENCIAL_PJBANK_EMPRESA
                                         WHERE
@@ -269,6 +270,40 @@ const salvaCredenciaisEmpresa = async (dados) => {
 
 }
 
+const salvaCredenciaisEmpresaCredencial = async (dados) => {
+
+  try {
+
+    await sql.connect(configBanco.sqlConfig);
+
+    const result = await sql.query`INSERT INTO CREDENCIAL_PJBANK_EMPRESA
+                                                  (
+                                                    CPEM_EMPR_COD,
+                                                    CPEM_CREDENCIAL,
+                                                    CPEM_CHAVE,
+                                                    CPEM_WEBHOOK_CHAVE,
+                                                    CPEM_CONTA_VIRTUAL,
+                                                    CPEM_AGENCIA_VIRTUAL
+
+                                                  )
+                                                  VALUES
+                                                  (
+                                                    ${dados.empresa_cod},
+                                                    ${dados.credencial},
+                                                    ${dados.chave},
+                                                    ${dados.webhook_chave},
+                                                    ${dados.conta_virtual},
+                                                    ${dados.agencia_virtual}
+                                                  )`;
+    return result;
+
+  } catch (err) {
+    console.log(err);
+    return err;
+  }
+
+}
+
 module.exports = { 
    selectCredencialEmpresa,
    dadosCobrancaTrParcelaRc, 
@@ -277,5 +312,6 @@ module.exports = {
    getDadosEmpresa,
    atualizaBoletoBanco,
    getPix,
-   salvaCredenciaisEmpresa
+   salvaCredenciaisEmpresa,
+   salvaCredenciaisEmpresaCredencial
 };

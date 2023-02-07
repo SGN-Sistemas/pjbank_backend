@@ -150,6 +150,26 @@ function impressaoBoletosLote(credencial, chave, numeros_pedidos){
             return axios(config);
 }
 
+function impressaoBoletosLoteSemContaDigital(credencial, chave, numeros_pedidos){
+
+    var data = JSON.stringify({
+        "pedido_numero": [...numeros_pedidos]
+        
+    });
+
+    var config = {
+        method: 'post',
+        url: `https://sandbox.pjbank.com.br/recebimentos/${credencial}/recebimentos/transacoes/lotes`,
+        headers: { 
+            'Content-Type': 'application/json', 
+            'X-CHAVE-CONTA': `${chave}`
+        },
+        data : data
+    };
+
+    return axios(config);
+}
+
 function invalidarBoleto(credencial, chave, pedido_numero){
 
             var data = '';
@@ -165,6 +185,23 @@ function invalidarBoleto(credencial, chave, pedido_numero){
 
             return axios(config);
            
+}
+
+function invalidarBoletoSemContaVirtual(credencial, chave, pedido_numero){
+
+    var data = '';
+
+    var config = {
+    method: 'delete',
+    url: `https://api.pjbank.com.br/recebimentos/${credencial}/transacoes/${pedido_numero}`,
+    headers: { 
+        'X-CHAVE-CONTA': `${chave}`
+    },
+    data : data
+    };
+
+    return axios(config);
+   
 }
 
 
@@ -218,11 +255,14 @@ function consultaBoletosPagamentosFiltros(credencial, chave, data_inicio, data_f
 }
 
 module.exports = {
+
     gerarBoletoSemPjbank,
     gerarBoletoContaPjbank,
     impressaoBoletosLote,
     invalidarBoleto,
     consultaPagamentoBoleto,
     consultaBoletosRecebimentosFiltros,
-    consultaBoletosPagamentosFiltros
+    consultaBoletosPagamentosFiltros,
+    impressaoBoletosLoteSemContaDigital,
+    invalidarBoletoSemContaVirtual
 };
