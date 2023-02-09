@@ -103,7 +103,7 @@ router.post('/conta', async (req, res, next) => {
 
 router.post('/conta/documentos', async (req, res, next) => {
 
-    data.append('arquivos', fs.createReadStream('/home/matheus/Vídeos/programa_nivelamento_ulife.pdf'));
+    data.append('arquivos', fs.createReadStream(__dirname+'/instrucoes_bat_pjbank.pdf'));
     data.append('tipo', 'contratosocial');
 
     let credencial;
@@ -132,8 +132,8 @@ router.post('/conta/documentos', async (req, res, next) => {
             res.json(response.data);
         })
         .catch(function (error) {
-            console.log(error.response.data);
-            res.json(error.response.data);
+            console.log(error);
+            res.json(error.message);
         });
 
     })()
@@ -163,6 +163,77 @@ router.post('/conta/administrador', async (req, res, next) => {
         chave = result_empresa.recordset[0].CPEM_CHAVE;
 
         conta.addPessoaAdminContaDigital(credencial, chave, email)
+       .then(function (response) {
+            console.log(JSON.stringify(response.data));
+            res.json(response.data);
+        })
+        .catch(function (error) {
+            console.log(error.response.data);
+            res.json(error.response.data);
+        });
+
+    })()
+    .then(resp => console.log(resp))
+    .catch(err => console.log(err));
+
+});
+
+router.get('/conta/administrador', (req, res, next) => {
+
+    let credencial;
+    let chave;
+
+    let empresa_cod = req.query.empresa;
+
+    (async () => {
+
+        const result_empresa = await querys.selectCredencialEmpresa(empresa_cod);
+
+        if (result_empresa.rowsAffected <= 0) {
+    
+            throw next(new Error('Empresa não encontrada!'));
+        }
+
+        credencial = result_empresa.recordset[0].CPEM_CREDENCIAL;
+        chave = result_empresa.recordset[0].CPEM_CHAVE;
+
+        conta.listaAdminContaDigital(credencial, chave)
+       .then(function (response) {
+            console.log(JSON.stringify(response.data));
+            res.json(response.data);
+        })
+        .catch(function (error) {
+            console.log(error.response.data);
+            res.json(error.response.data);
+        });
+
+    })()
+    .then(resp => console.log(resp))
+    .catch(err => console.log(err));
+
+});
+
+router.get('/conta/status_socio/administrador', (req, res, next) => {
+
+    let credencial;
+    let chave;
+
+    let empresa_cod = req.query.empresa;
+    let email = req.query.email;
+
+    (async () => {
+
+        const result_empresa = await querys.selectCredencialEmpresa(empresa_cod);
+
+        if (result_empresa.rowsAffected <= 0) {
+    
+            throw next(new Error('Empresa não encontrada!'));
+        }
+
+        credencial = result_empresa.recordset[0].CPEM_CREDENCIAL;
+        chave = result_empresa.recordset[0].CPEM_CHAVE;
+
+        conta.statusCossioConta(credencial, chave, email)
        .then(function (response) {
             console.log(JSON.stringify(response.data));
             res.json(response.data);

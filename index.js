@@ -26,4 +26,3 @@ app.use((error, req, res, next) => {
 app.listen(9000, () => {
      console.log("Servidor rodando na porta 9000...");
 })
-

@@ -74,7 +74,7 @@ function addPessoaAdminContaDigital(credencial, chave, email){
         
         var config = {
             method: 'post',
-            url: `https://api.pjbank.com.br/contadigital/${credencial}/administradores`,
+            url: `https://sandbox.pjbank.com.br/contadigital/${credencial}/administradores`,
             headers: { 
             'X-CHAVE-CONTA': `${chave}`, 
             'Content-Type': 'application/json'
@@ -129,30 +129,24 @@ function addPagamentosContaDigital(){
         });
 }
 
-function listaAdminContaDigital(){
+function listaAdminContaDigital(credencial, chave){
 
         var config = {
             method: 'get',
-            url: 'https://sandbox.pjbank.com.br/contadigital/f81254c1324447552e77dd306201c1f3c723e1c0/administradores',
+            url: `https://sandbox.pjbank.com.br/contadigital/${credencial}/administradores`,
             headers: { 
-                'X-CHAVE-CONTA': 'e0bdd68a9fe7047367d9cc693e5e2482886a6549'
+                'X-CHAVE-CONTA': `${chave}`
             }
         };
 
-        axios(config)
-        .then(function (response) {
-            console.log(JSON.stringify(response.data));
-        })
-        .catch(function (error) {
-            console.log(error);
-        });
+        return axios(config);
 }
 
 function infoContaDigital(credencial, chave){
 
         var config = {
           method: 'get',
-          url: `https://api.pjbank.com.br/contadigital/${credencial}`,
+          url: `https://sandbox.pjbank.com.br/contadigital/${credencial}`,
           headers: { 
             'X-CHAVE-CONTA': `${chave}`
           }
@@ -184,23 +178,17 @@ function deletarPessoaContaDigital(pessoa_email){
         });
 }
 
-function statusCossioConta(pessoa_email){
+function statusCossioConta(credencial, chave, pessoa_email){
 
     var config = {
         method: 'get',
-        url: 'https://api.pjbank.com.br/contadigital/f81254c1324447552e77dd306201c1f3c723e1c0/administradores/' + pessoa_email,
+        url: `https://sandbox.pjbank.com.br/contadigital/${credencial}/administradores/` + pessoa_email,
         headers: { 
-            'X-CHAVE-CONTA': 'e0bdd68a9fe7047367d9cc693e5e2482886a6549'
+            'X-CHAVE-CONTA': `${chave}`
         }
     };
 
-    axios(config)
-    .then(function (response) {
-        console.log(JSON.stringify(response.data));
-    })
-    .catch(function (error) {
-        console.log(error);
-    });
+    return axios(config);
 }
 
 function pagamentoComPix(pix, tipo_pix){
@@ -282,7 +270,7 @@ function addDocumentoContaDigital(credencial, chave, data){
 
     var config = {
         method: 'post',
-        url: `https://api.pjbank.com.br/contadigital/${credencial}/documentos`,
+        url: `https://sandbox.pjbank.com.br/contadigital/${credencial}/documentos`,
         headers: { 
             'X-CHAVE-CONTA': `${chave}`, 
             ...data.getHeaders()

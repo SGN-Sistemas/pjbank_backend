@@ -26,6 +26,32 @@ const selectCredencialEmpresa = async (empresa) => {
   }
 }
 
+const selectCredencialEmpresaSemContaDigital = async (empresa) => {
+
+  try {
+
+    await sql.connect(configBanco.sqlConfig);
+    const result = await sql.query`SELECT
+                                                CPEM_CREDENCIAL,
+                                                CPEM_URL_WEBHOOK,
+                                                CPEM_URL_LOGO,
+                                                CPEM_CHAVE,
+                                                CPEM_CONTA_VIRTUAL,
+                                                CPEM_AGENCIA_VIRTUAL
+                                        FROM
+                                                CREDENCIAL_PJBANK_EMPRESA
+                                        WHERE
+                                                CPEM_EMPR_COD = ${empresa}
+                                        AND
+                                                CPEM_CONTA_VIRTUAL IS NOT NULL OR CPEM_CONTA_VIRTUAL <> ''`;
+    return result;
+
+  } catch (err) {
+    console.log(err);
+    return err;
+  }
+}
+
 const dadosCobrancaTrParcelaRc = async (codigos) => {
 
   try {
@@ -313,5 +339,6 @@ module.exports = {
    atualizaBoletoBanco,
    getPix,
    salvaCredenciaisEmpresa,
-   salvaCredenciaisEmpresaCredencial
+   salvaCredenciaisEmpresaCredencial,
+   selectCredencialEmpresaSemContaDigital
 };

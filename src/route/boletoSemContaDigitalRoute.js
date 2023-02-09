@@ -494,8 +494,11 @@ router.post('/boleto_recebimento/lote', (req, res, next) => {
 
           const result_empresa = await querys.selectCredencialEmpresa(empresa_cod);
 
+      //     const result_empresa = await querys.selectCredencialEmpresaSemContaDigital(empresa_cod);
+
           if(result_empresa.rowsAffected <= 0){
-               throw next(new Error("Sem dados das credenciais dessa empresa!"));
+            res.json({"erro":"Sem dados das credenciais dessa empresa!"});
+            //    throw new Error("Sem dados das credenciais dessa empresa!");
           }
 
           let credencial = result_empresa.recordset[0].CPEM_CREDENCIAL;
@@ -505,7 +508,8 @@ router.post('/boleto_recebimento/lote', (req, res, next) => {
           console.log(dadosCobranca);
 
           if(dadosCobranca.rowsAffected <= 0){
-                throw next(new Error("Não foi encontrado o boleto de cobrança para estes números de pedido!"));
+                res.json({"erro": "Não foi encontrado o boleto de cobrança para estes números de pedido!"});
+                //throw next(new Error("Não foi encontrado o boleto de cobrança para estes números de pedido!"));
           }
 
           let numeros_pedidos = dadosCobranca.recordset.map(item => item.BCPJ_PEDIDO_NUMERO);

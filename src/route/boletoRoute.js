@@ -409,7 +409,6 @@ router.post('/boleto', (req, res, next) => {
                                                             }
                                                       })
                                                       .catch(function (error) {
-                                                            //throw next(new Error("Problema na requisição!"));
                                                             res.json(error);
                                                             console.log(error);
                                                       });
@@ -422,7 +421,6 @@ router.post('/boleto', (req, res, next) => {
                   } catch (err) {
                         console.log(err);
                         res.json(err);
-                        //throw next(new Error("Problema na requisição!"));
                   }
             })()
 

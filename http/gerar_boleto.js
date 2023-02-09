@@ -152,6 +152,8 @@ function impressaoBoletosLote(credencial, chave, numeros_pedidos){
 
 function impressaoBoletosLoteSemContaDigital(credencial, chave, numeros_pedidos){
 
+    console.log(chave)
+
     var data = JSON.stringify({
         "pedido_numero": [...numeros_pedidos]
         
@@ -159,10 +161,10 @@ function impressaoBoletosLoteSemContaDigital(credencial, chave, numeros_pedidos)
 
     var config = {
         method: 'post',
-        url: `https://sandbox.pjbank.com.br/recebimentos/${credencial}/recebimentos/transacoes/lotes`,
+        url: `https://sandbox.pjbank.com.br/recebimentos/${credencial}/transacoes/lotes`,
         headers: { 
             'Content-Type': 'application/json', 
-            'X-CHAVE-CONTA': `${chave}`
+            'X-CHAVE': `${chave}`
         },
         data : data
     };
