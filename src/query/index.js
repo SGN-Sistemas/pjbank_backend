@@ -89,6 +89,62 @@ const dadosCobrancaTrParcelaRc = async (codigos) => {
   }
 }
 
+const getDadosContatoCliente = async (clie_cod) => {
+
+  try {
+
+    await sql.connect(configBanco.sqlConfig);
+
+    const result = await sql.query`  SELECT 
+                                          PEJU_CGC as cpf_cnpf,
+                                          PEJU_EMAIL as email,
+                                          PEJU_UNFE_SIGLA as uf,
+                                          PEJU_CIDADE as cidade,
+                                          PEJU_BAIRRO as bairro,
+                                          PEJU_RAZAO_SOCIAL as nome,
+                                          PEJU_END as ende,
+                                          PEJU_CEP as cep
+                                     FROM 
+                                          PESSOA_JURIDICA
+                                     INNER JOIN
+                                          CLIENTE
+                                     ON 
+                                          CLIE_TIPO_COD = PEJU_COD 
+                                     AND
+                                          CLIE_TIPO = 'J'
+                                     AND
+                                          CLIE_TIPO_COD = ${clie_cod}
+                                          
+                                          UNION	
+                                          
+                                     SELECT 
+                                            PEFI_CPF as cpf_cnpf,
+                                            PEFI_EMAIL as email,
+                                            PEFI_UNFE_SIGLA as uf,
+                                            PEFI_CIDADE as cidade,
+                                            PEFI_BAIRRO as bairro,
+                                            PEFI_NOME as nome,
+                                            PEFI_END as ende,
+                                            PEFI_CEP as cep
+                                     FROM 
+                                            PESSOA_FISICA
+                                     INNER JOIN
+                                            CLIENTE
+                                     ON 
+                                            CLIE_TIPO_COD = PEFI_COD
+                                     AND
+                                            CLIE_TIPO = 'F'
+                                     AND
+                                            CLIE_TIPO_COD = ${clie_cod}`;
+    return result;
+
+  } catch (err) {
+    console.log(err);
+    return err;
+  }
+
+}
+
 const dadosCliente = async (cliente_cod) => {
 
   try {
@@ -98,14 +154,15 @@ const dadosCliente = async (cliente_cod) => {
     const result = await sql.query`SELECT
                                         CLIE_COD,
                                         CLIE_NOME,
-                                        PEFI_CPF,
-                                        PEFI_UNFE_SIGLA,
-                                        PEFI_CIDADE,
-                                        PEFI_END,
-                                        PEFI_BAIRRO,
-                                        PEFI_CEP,
+                                        PEFI_CPF AS CPF,
+                                        PEFI_UNFE_SIGLA AS UNFE,
+                                        PEFI_CIDADE AS CIDADE,
+                                        PEFI_END AS ENDERECO,
+                                        PEFI_BAIRRO AS BAIRRO,
+                                        PEFI_CEP AS CEP,
                                         CLIE_TIPO,
-                                        PEFI_EMAIL
+                                        PEFI_EMAIL AS EMAIL,
+                                        PEFI_TEL AS TELEFONE
                                     FROM
                                         CLIENTE
                                     INNER JOIN
@@ -114,20 +171,23 @@ const dadosCliente = async (cliente_cod) => {
                                         PEFI_COD = CLIE_TIPO_COD
                                     WHERE
                                         CLIE_TIPO_COD = ${cliente_cod}
+                                    AND
+                                        CLIE_TIPO = 'F'
 
                                     UNION
 
                                     SELECT
                                         CLIE_COD,
                                         CLIE_NOME,
-                                        PEJU_CGC,
-                                        PEJU_UNFE_SIGLA_COBR,
-                                        PEJU_CIDADE,
-                                        PEJU_END,
-                                        PEJU_BAIRRO,
-                                        PEJU_CEP_COBR,
+                                        PEJU_CGC AS CPF,
+                                        PEJU_UNFE_SIGLA_COBR AS UNFE,
+                                        PEJU_CIDADE AS CIDADE,
+                                        PEJU_END AS ENDERECO,
+                                        PEJU_BAIRRO AS BAIRRO,
+                                        PEJU_CEP_COBR AS CEP,
                                         CLIE_TIPO,
-                                        PEJU_EMAIL
+                                        PEJU_EMAIL AS EMAIL,
+                                        PEJU_TEL AS TELEFONE
                                     FROM
                                         CLIENTE
                                     INNER JOIN
@@ -135,7 +195,9 @@ const dadosCliente = async (cliente_cod) => {
                                     ON
                                         PEJU_COD = CLIE_TIPO_COD
                                     WHERE
-                                        CLIE_TIPO_COD = ${cliente_cod}`;
+                                        CLIE_TIPO_COD = ${cliente_cod}
+                                    AND
+                                        CLIE_TIPO = 'J'`;
     return result;
 
   } catch (err) {
@@ -340,5 +402,6 @@ module.exports = {
    getPix,
    salvaCredenciaisEmpresa,
    salvaCredenciaisEmpresaCredencial,
-   selectCredencialEmpresaSemContaDigital
+   selectCredencialEmpresaSemContaDigital,
+   getDadosContatoCliente
 };

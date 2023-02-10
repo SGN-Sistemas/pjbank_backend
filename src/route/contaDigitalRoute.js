@@ -226,8 +226,9 @@ router.get('/conta/status_socio/administrador', (req, res, next) => {
         const result_empresa = await querys.selectCredencialEmpresa(empresa_cod);
 
         if (result_empresa.rowsAffected <= 0) {
-    
-            throw next(new Error('Empresa não encontrada!'));
+
+            res.json({"erro": 'Empresa não encontrada!'});
+            // throw next(new Error('Empresa não encontrada!'));
         }
 
         credencial = result_empresa.recordset[0].CPEM_CREDENCIAL;
@@ -248,5 +249,79 @@ router.get('/conta/status_socio/administrador', (req, res, next) => {
     .catch(err => console.log(err));
 
 });
+
+
+router.post('/conta/add_saldo', async (req, res, next) => {
+
+    let credencial;
+    let chave;
+
+    let empresa_cod = req.query.empresa;
+    let valor = req.query.valor;
+
+    (async () => {
+
+        const result_empresa = await querys.selectCredencialEmpresa(empresa_cod);
+
+        if (result_empresa.rowsAffected <= 0) {
+    
+            throw next(new Error('Empresa não encontrada!'));
+        }
+
+        credencial = result_empresa.recordset[0].CPEM_CREDENCIAL;
+        chave = result_empresa.recordset[0].CPEM_CHAVE;
+
+        conta.addSaldoContaDigital(credencial, chave, valor)
+       .then(function (response) {
+            console.log(JSON.stringify(response.data));
+            res.json(response.data);
+        })
+        .catch(function (error) {
+            console.log(error.response.data);
+            res.json(error.response.data);
+        });
+
+    })()
+    .then(resp => console.log(resp))
+    .catch(err => console.log(err));
+
+});
+
+router.delete('/conta/administrador', async (req, res, next) => {
+
+    let credencial;
+    let chave;
+
+    let empresa_cod = req.query.empresa;
+    let email = req.query.email;
+
+    (async () => {
+
+        const result_empresa = await querys.selectCredencialEmpresa(empresa_cod);
+
+        if (result_empresa.rowsAffected <= 0) {
+    
+            throw next(new Error('Empresa não encontrada!'));
+        }
+
+        credencial = result_empresa.recordset[0].CPEM_CREDENCIAL;
+        chave = result_empresa.recordset[0].CPEM_CHAVE;
+
+        conta.deletarPessoaContaDigital(credencial, chave, email)
+       .then(function (response) {
+            console.log(JSON.stringify(response.data));
+            res.json(response.data);
+        })
+        .catch(function (error) {
+            console.log(error.response.data);
+            res.json(error.response.data);
+        });
+
+    })()
+    .then(resp => console.log(resp))
+    .catch(err => console.log(err));
+
+});
+
 
 module.exports = router;

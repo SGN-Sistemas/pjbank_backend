@@ -66,9 +66,9 @@ router.post('/boleto', (req, res, next) => {
 
                               const exists_boletos = await sql.query`SELECT
                                                                               BCPJ_COD
-                                                                        FROM
+                                                                     FROM
                                                                               BOLETO_COBRANCA_PJBANK
-                                                                        WHERE
+                                                                     WHERE
                                                                               BCPJ_PEDIDO_NUMERO IN (${codigos})`;
                               console.log(exists_boletos);
                               dados_parcela = [...dados_cobranca.recordset];
@@ -82,15 +82,18 @@ router.post('/boleto', (req, res, next) => {
                               let endereco_cliente;
                               let bairro_cliente;
                               let cep_cliente;
+                              let email_cliente;
+                              let telefone_cliente;
 
                               nome_cliente = cliente[0].CLIE_NOME;
-                              cpf_cliente = cliente[0].PEFI_CPF;
-                              uf_cliente = cliente[0].PEFI_UNFE_SIGLA;
-                              cidade_cliente = cliente[0].PEFI_CIDADE;
-                              endereco_cliente = cliente[0].PEFI_END;
-                              bairro_cliente = cliente[0].PEFI_BAIRRO;
-                              cep_cliente = cliente[0].PEFI_CEP;
-                              email_cliente = cliente[0].PEFI_EMAIL;
+                              cpf_cliente = cliente[0].CPF;
+                              uf_cliente = cliente[0].UNFE;
+                              cidade_cliente = cliente[0].CIDADE;
+                              endereco_cliente = cliente[0].ENDERECO;
+                              bairro_cliente = cliente[0].BAIRRO;
+                              cep_cliente = cliente[0].CEP;
+                              email_cliente = cliente[0].EMAIL;
+                              telefone_cliente = cliente[0].TELEFONE;
 
                               let data_formatada;
                               array_parcelas = dados_parcela.map((parcela) => {
@@ -272,15 +275,17 @@ router.post('/boleto', (req, res, next) => {
                                     let bairro_cliente;
                                     let cep_cliente;
                                     let email_cliente;
+                                    let telefone_cliente;
 
                                     nome_cliente = cliente[0].CLIE_NOME;
-                                    cpf_cliente = cliente[0].PEFI_CPF;
-                                    uf_cliente = cliente[0].PEFI_UNFE_SIGLA;
-                                    cidade_cliente = cliente[0].PEFI_CIDADE;
-                                    endereco_cliente = cliente[0].PEFI_END;
-                                    bairro_cliente = cliente[0].PEFI_BAIRRO;
-                                    cep_cliente = cliente[0].PEFI_CEP;
-                                    email_cliente = cliente[0].PEFI_EMAIL;
+                                    cpf_cliente = cliente[0].CPF;
+                                    uf_cliente = cliente[0].UNFE;
+                                    cidade_cliente = cliente[0].CIDADE;
+                                    endereco_cliente = cliente[0].ENDERECO;
+                                    bairro_cliente = cliente[0].BAIRRO;
+                                    cep_cliente = cliente[0].CEP;
+                                    email_cliente = cliente[0].EMAIL;
+                                    telefone_cliente = cliente[0].TELEFONE;
 
                                     data_formatada = datas.getFormatDate(parcela.TRPR_DTVENC);
 
@@ -546,7 +551,6 @@ router.get('/boleto/filtros', (req, res, next) => {
             .catch(function (error) {
                    console.log(error);
                    res.json(error);
-                  //  throw next(new Error(error));
             });
       })()
       .then(resp => console.log(resp))
@@ -587,7 +591,6 @@ router.get('/boleto/pagamentos/filtros', (req, res, next) => {
             .catch(function (error) {
                   console.log(error);
                   res.json(error);
-                  // throw next(new Error(error));
             });
 
       })()
@@ -622,7 +625,6 @@ router.delete('/boleto', (req, res, next) => {
             .catch(function (error) {
                   console.log(error);
                   res.json(error);
-                  //throw next(new Error(error));
             });
 
       })()

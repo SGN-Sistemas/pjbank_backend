@@ -83,15 +83,18 @@ router.post('/boleto_recebimento', (req, res, next) => {
                               let endereco_cliente;
                               let bairro_cliente;
                               let cep_cliente;
+                              let email_cliente;
+                              let telefone_cliente;
 
                               nome_cliente = cliente[0].CLIE_NOME;
-                              cpf_cliente = cliente[0].PEFI_CPF;
-                              uf_cliente = cliente[0].PEFI_UNFE_SIGLA;
-                              cidade_cliente = cliente[0].PEFI_CIDADE;
-                              endereco_cliente = cliente[0].PEFI_END;
-                              bairro_cliente = cliente[0].PEFI_BAIRRO;
-                              cep_cliente = cliente[0].PEFI_CEP;
-                              email_cliente = cliente[0].PEFI_EMAIL;
+                              cpf_cliente = cliente[0].CPF;
+                              uf_cliente = cliente[0].UNFE;
+                              cidade_cliente = cliente[0].CIDADE;
+                              endereco_cliente = cliente[0].ENDERECO;
+                              bairro_cliente = cliente[0].BAIRRO;
+                              cep_cliente = cliente[0].CEP;
+                              email_cliente = cliente[0].EMAIL;
+                              telefone_cliente = cliente[0].TELEFONE;
 
                               let data_formatada;
                               array_parcelas = dados_parcela.map((parcela) => {
@@ -107,8 +110,8 @@ router.post('/boleto_recebimento', (req, res, next) => {
                                           "multa": parcela.TRPR_VALMULTA,
                                           "multa_fixo": parcela.TRPR_VALMULTA,
                                           "nome_cliente": nome_cliente,
-                                          "email_cliente": "exemplo@hotmail.com",
-                                          "telefone_cliente": "1940096830",
+                                          "email_cliente": email_cliente,
+                                          "telefone_cliente": telefone_cliente,
                                           "cpf_cliente": cpf_cliente,
                                           "endereco_cliente": endereco_cliente,
                                           "numero_cliente": "509",
@@ -127,6 +130,9 @@ router.post('/boleto_recebimento', (req, res, next) => {
                                           "pix": forma_pagamento
 
                                     }
+
+                                    console.log(obj);
+
                                     return obj;
                               });
 
@@ -278,15 +284,17 @@ router.post('/boleto_recebimento', (req, res, next) => {
                                     let bairro_cliente;
                                     let cep_cliente;
                                     let email_cliente;
+                                    let telefone_cliente;
 
                                     nome_cliente = cliente[0].CLIE_NOME;
-                                    cpf_cliente = cliente[0].PEFI_CPF;
-                                    uf_cliente = cliente[0].PEFI_UNFE_SIGLA;
-                                    cidade_cliente = cliente[0].PEFI_CIDADE;
-                                    endereco_cliente = cliente[0].PEFI_END;
-                                    bairro_cliente = cliente[0].PEFI_BAIRRO;
-                                    cep_cliente = cliente[0].PEFI_CEP;
-                                    email_cliente = cliente[0].PEFI_EMAIL;
+                                    cpf_cliente = cliente[0].CPF;
+                                    uf_cliente = cliente[0].UNFE;
+                                    cidade_cliente = cliente[0].CIDADE;
+                                    endereco_cliente = cliente[0].ENDERECO;
+                                    bairro_cliente = cliente[0].BAIRRO;
+                                    cep_cliente = cliente[0].CEP;
+                                    email_cliente = cliente[0].EMAIL;
+                                    telefone_cliente = cliente[0].TELEFONE;
 
                                     data_formatada = datas.getFormatDate(parcela.TRPR_DTVENC);
 
@@ -299,8 +307,8 @@ router.post('/boleto_recebimento', (req, res, next) => {
                                           "multa": parcela.TRPR_VALMULTA ? parcela.TRPR_VALMULTA : "",
                                           "multa_fixo": parcela.TRPR_VALMULTA ? parcela.TRPR_VALMULTA : "",
                                           "nome_cliente": nome_cliente ? nome_cliente : "",
-                                          "email_cliente": "exemplo@hotmail.com" ? "exemplo@hotmail.com" : "",
-                                          "telefone_cliente": "1940096830" ? "1940096830" : "",
+                                          "email_cliente": email_cliente ? email_cliente : "",
+                                          "telefone_cliente": telefone_cliente ? telefone_cliente : "",
                                           "cpf_cliente": cpf_cliente ? cpf_cliente : "",
                                           "endereco_cliente": endereco_cliente ? endereco_cliente : "",
                                           "numero_cliente": "509",
