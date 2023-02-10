@@ -54,6 +54,8 @@ router.post('/conta_recebimento', async (req, res, next) => {
         throw next(new Error('Não foi encontrado os dados da empresa!'));
     }
 
+    // const dadosBancarios = await querys.getDadosBancarios();
+
     let dadosBanco = {
         "conta_repasse": "99999-9",
         "agencia_repasse": "0001",

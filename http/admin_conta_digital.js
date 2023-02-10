@@ -166,6 +166,25 @@ function deletarPessoaContaDigital(credencial, chave, pessoa_email){
         return axios(config);
 }
 
+function pagamentoComCodigoBarras(credencial, chave, data){
+
+    dados = [data];
+
+    console.log(dados);
+
+    var config = {
+        method: 'post',
+        url: `https://sandbox.pjbank.com.br/contadigital/${credencial}/transacoes`,
+        headers: { 
+            'X-CHAVE-CONTA': `${chave}`, 
+            'Content-Type': 'application/json'
+        },
+        data : dados
+    };
+
+    return axios(config);
+}
+
 function statusCossioConta(credencial, chave, pessoa_email){
 
     var config = {
@@ -317,5 +336,6 @@ module.exports = {  criarContaDigital,
                     pagamentoComPix,
                     addDocumentoContaDigital,
                     criarCredencialContaRecebimento,
-                    transferenciaDocTed
+                    transferenciaDocTed,
+                    pagamentoComCodigoBarras
                 };

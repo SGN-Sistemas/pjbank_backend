@@ -359,4 +359,47 @@ router.post('/conta/transferencia/doc_ted', async (req, res, next) => {
 
 });
 
+router.post('/conta/pagamento_codigo_barras', async (req, res, next) => {
+
+    const empresa_cod = req.query.empresa;
+
+    const dados = req.body;
+
+    let lote = {
+        
+            ...dados
+    };
+
+    console.log(lote);
+
+    (async () => {
+
+        const result_empresa = await querys.selectCredencialEmpresa(empresa_cod);
+
+        if (result_empresa.rowsAffected <= 0) {
+    
+            throw next(new Error('Empresa não encontrada!'));
+        }
+
+        credencial = result_empresa.recordset[0].CPEM_CREDENCIAL;
+        chave = result_empresa.recordset[0].CPEM_CHAVE;
+
+        conta.pagamentoComCodigoBarras(credencial, chave, lote)
+        .then(async function (response) {
+
+            console.log(JSON.stringify(response.data));
+
+            res.json(response.data);
+        })
+        .catch(function (error) {
+            console.log(error.response.data);
+            res.json(error.response.data);
+        });
+
+    })()
+    .then(resp => console.log(resp))
+    .catch(err => console.log(err));
+
+});
+
 module.exports = router;

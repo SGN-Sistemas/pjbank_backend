@@ -150,9 +150,31 @@ function impressaoBoletosLote(credencial, chave, numeros_pedidos){
             return axios(config);
 }
 
-function impressaoBoletosLoteSemContaDigital(credencial, chave, numeros_pedidos){
+function impressaoBoletosCarne(credencial, chave, numeros_pedidos){
 
-    console.log(chave)
+    console.log(numeros_pedidos)
+
+    var data = JSON.stringify({
+        "pedido_numero": [...numeros_pedidos],
+        "formato": "carne"
+    });
+
+    console.log(data);
+
+    var config = {
+        method: 'post',
+        url: `https://sandbox.pjbank.com.br/contadigital/${credencial}/recebimentos/transacoes/lotes`,
+        headers: { 
+            'X-CHAVE-CONTA': `${chave}`,
+            'Content-Type': 'application/json'
+        },
+        data : data
+    };
+
+    return axios(config);
+}
+
+function impressaoBoletosLoteSemContaDigital(credencial, chave, numeros_pedidos){
 
     var data = JSON.stringify({
         "pedido_numero": [...numeros_pedidos]
@@ -161,10 +183,10 @@ function impressaoBoletosLoteSemContaDigital(credencial, chave, numeros_pedidos)
 
     var config = {
         method: 'post',
-        url: `https://sandbox.pjbank.com.br/recebimentos/${credencial}/transacoes/lotes`,
+        url: `https://sandbox.pjbank.com.br/contadigital/${credencial}/recebimentos/transacoes`,
         headers: { 
-            'Content-Type': 'application/json', 
-            'X-CHAVE': `${chave}`
+            'X-CHAVE-CONTA': `${chave}`,
+            'Content-Type': 'application/json'
         },
         data : data
     };
@@ -266,6 +288,6 @@ module.exports = {
     consultaBoletosRecebimentosFiltros,
     consultaBoletosPagamentosFiltros,
     impressaoBoletosLoteSemContaDigital,
-    invalidarBoletoSemContaVirtual
-
+    invalidarBoletoSemContaVirtual,
+    impressaoBoletosCarne
 };
