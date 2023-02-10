@@ -269,6 +269,41 @@ function addDocumentoContaDigital(credencial, chave, data){
     return axios(config);
 }
 
+function transferenciaDocTed(credencial, chave, dados){
+
+    var data = JSON.stringify({
+        "lote": [
+            {
+                "data_vencimento": dados.data_vencimento,
+                "data_pagamento": dados.data_pagamento,
+                "valor": dados.valor,
+                "banco_favorecido": dados.banco_favorecido,
+                "agencia_favorecido": dados.agencia_favorecido,
+                "conta_favorecido": dados.conta_favorecido,
+                "cnpj_favorecido": dados.cnpj_favorecido,
+                "nome_favorecido": dados.nome_favorecido,
+                "descricao": "Pagamento de exemplo",
+                "solicitante": dados.solicitante,
+                "tipo_conta_favorecido": dados.tipo_conta_favorecido
+            }
+        ]
+    });
+
+    var config = {
+        method: 'post',
+        url: `https://sandbox.pjbank.com.br/contadigital/${credencial}/transacoes`,
+        headers: { 
+            'X-CHAVE-CONTA': `${chave}`, 
+            'Content-Type': 'application/json'
+        },
+        data : data
+    };
+
+    return axios(config);
+
+}
+
+
 module.exports = {  criarContaDigital,
                     extrato_recebimentos,
                     extraRecebimentosEfetivamentePagos , 
@@ -281,5 +316,6 @@ module.exports = {  criarContaDigital,
                     statusCossioConta, 
                     pagamentoComPix,
                     addDocumentoContaDigital,
-                    criarCredencialContaRecebimento
+                    criarCredencialContaRecebimento,
+                    transferenciaDocTed
                 };

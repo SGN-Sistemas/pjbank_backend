@@ -1,61 +1,43 @@
 var axios = require('axios');
 
-function extrato_recebimentos(){
+function extrato_recebimentos(credencial, chave){
 
     var config = {
         method: 'get',
-        url: 'https://sandbox.pjbank.com.br/contadigital/f81254c1324447552e77dd306201c1f3c723e1c0/recebimentos/transacoes',
+        url: `https://sandbox.pjbank.com.br/contadigital/${credencial}/recebimentos/transacoes`,
         headers: { 
-            'X-CHAVE-CONTA': 'e0bdd68a9fe7047367d9cc693e5e2482886a6549'
+            'X-CHAVE-CONTA': `${chave}`
         }
     };
 
-    axios(config)
-    .then(function (response) {
-        console.log(JSON.stringify(response.data));
-    })
-    .catch(function (error) {
-        console.log(error);
-    });
+    return axios(config);
 }
 
-function extrato_recebidos_efetivados(){
+function extrato_recebidos_efetivados(credencial, chave){
 
     var config = {
         method: 'get',
-        url: 'https://sandbox.pjbank.com.br/contadigital/f81254c1324447552e77dd306201c1f3c723e1c0/recebimentos/transacoes?pago=1',
+        url: `https://sandbox.pjbank.com.br/contadigital/${credencial}/recebimentos/transacoes?pago=1`,
         headers: { 
-          'X-CHAVE-CONTA': 'e0bdd68a9fe7047367d9cc693e5e2482886a6549', 
+          'X-CHAVE-CONTA': `${chave}`, 
           'Content-Type': 'application/json'
         }
       };
       
-      axios(config)
-      .then(function (response) {
-        console.log(JSON.stringify(response.data));
-      })
-      .catch(function (error) {
-        console.log(error);
-      });
+      return axios(config);
 }
 
-function extrato_recebimento_filtro_data(data_inicio, data_fim){
+function extrato_recebimento_filtro_data(credencial, chave, data_inicio, data_fim){
 
     var config = {
-    method: 'get',
-    url: `https://sandbox.pjbank.com.br/contadigital/f81254c1324447552e77dd306201c1f3c723e1c0/recebimentos/transacoes?data_inicio=${data_inicio}&data_fim=${data_fim}`,
-    headers: { 
-        'X-CHAVE-CONTA': 'e0bdd68a9fe7047367d9cc693e5e2482886a6549'
-    }
+        method: 'get',
+        url: `https://sandbox.pjbank.com.br/contadigital/${credencial}/recebimentos/transacoes?data_inicio=${data_inicio}&data_fim=${data_fim}`,
+        headers: { 
+            'X-CHAVE-CONTA': `${chave}`
+        }
     };
 
-    axios(config)
-    .then(function (response) {
-        console.log(JSON.stringify(response.data));
-    })
-    .catch(function (error) {
-        console.log(error);
-    });
+    return axios(config);
     
 }
 

@@ -194,18 +194,17 @@ function invalidarBoletoSemContaVirtual(credencial, chave, pedido_numero){
     var data = '';
 
     var config = {
-    method: 'delete',
-    url: `https://api.pjbank.com.br/recebimentos/${credencial}/transacoes/${pedido_numero}`,
-    headers: { 
-        'X-CHAVE-CONTA': `${chave}`
-    },
-    data : data
+        method: 'delete',
+        url: `https://sandbox.pjbank.com.br/recebimentos/${credencial}/transacoes/${pedido_numero}`,
+        headers: { 
+            'X-CHAVE': `${chave}`
+        },
+        data : data
     };
 
     return axios(config);
    
 }
-
 
 function consultaPagamentoBoleto(credencial, chave, id_unico){
 
@@ -256,6 +255,7 @@ function consultaBoletosPagamentosFiltros(credencial, chave, data_inicio, data_f
         return axios(config);
 }
 
+
 module.exports = {
 
     gerarBoletoSemPjbank,
@@ -267,4 +267,5 @@ module.exports = {
     consultaBoletosPagamentosFiltros,
     impressaoBoletosLoteSemContaDigital,
     invalidarBoletoSemContaVirtual
+
 };

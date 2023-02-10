@@ -6,6 +6,7 @@ const querys = require('../query/index');
 
 const router = express.Router();
 const operacoes_pix = require('../../http/pix');
+const { query } = require('express');
 
 router.post('/pix/pagamento', (req, res, next) => {
 
@@ -72,6 +73,5 @@ router.post('/pix/pagamento', (req, res, next) => {
     .catch(err => console.log(err));
 
 });
-
 
 module.exports = router;

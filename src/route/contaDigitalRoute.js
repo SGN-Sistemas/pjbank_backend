@@ -323,5 +323,40 @@ router.delete('/conta/administrador', async (req, res, next) => {
 
 });
 
+router.post('/conta/transferencia/doc_ted', async (req, res, next) => {
+
+    let credencial;
+    let chave;
+
+    let empresa_cod = req.query.empresa;
+    let dados = req.body;
+
+    (async () => {
+
+        const result_empresa = await querys.selectCredencialEmpresa(empresa_cod);
+
+        if (result_empresa.rowsAffected <= 0) {
+    
+            throw next(new Error('Empresa não encontrada!'));
+        }
+
+        credencial = result_empresa.recordset[0].CPEM_CREDENCIAL;
+        chave = result_empresa.recordset[0].CPEM_CHAVE;
+
+        conta.transferenciaDocTed(credencial, chave, dados)
+       .then(function (response) {
+            console.log(JSON.stringify(response.data));
+            res.json(response.data);
+        })
+        .catch(function (error) {
+            console.log(error.response.data);
+            res.json(error.response.data);
+        });
+
+    })()
+    .then(resp => console.log(resp))
+    .catch(err => console.log(err));
+
+});
 
 module.exports = router;

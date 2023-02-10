@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 
 const conta = require('../../http/admin_conta_digital');
+const extrato = require('../../http/extrato');
 const querys = require('../query/index');
 const limpaMascaras = require('../utilitarios/retiraMascaras/limpaMascara');
 
@@ -111,6 +112,104 @@ router.post('/conta_recebimento', async (req, res, next) => {
     .then(resp => console.log(resp))
     .catch(err => console.log(err));
 
+});
+
+router.get('/conta/extrato', (req, res, next) => {
+
+    let empresa_cod = req.query.empresa;
+
+    (async () => {
+
+        const result_empresa = await querys.selectCredencialEmpresa(empresa_cod);
+
+        if (result_empresa.rowsAffected <= 0) {
+    
+            throw next(new Error('Empresa não encontrada!'));
+        }
+
+        let credencial = result_empresa.recordset[0].CPEM_CREDENCIAL;
+        let chave = result_empresa.recordset[0].CPEM_CHAVE;
+
+        extrato.extrato_recebimentos(credencial, chave)
+        .then(function (response) {
+            console.log(JSON.stringify(response.data));
+            res.json(response.data);
+        })
+        .catch(function (error) {
+            console.log(error);
+            throw next(new Error(error));
+        });
+
+    })()
+    .then(resp => console.log(resp))
+    .catch(err => console.log(err));
+});
+
+router.get('/conta/extrato/efetivamente_pagos', (req, res, next) => {
+
+    let empresa_cod = req.query.empresa;
+
+    (async () => {
+
+        const result_empresa = await querys.selectCredencialEmpresa(empresa_cod);
+
+        if (result_empresa.rowsAffected <= 0) {
+    
+            throw next(new Error('Empresa não encontrada!'));
+        }
+
+        let credencial = result_empresa.recordset[0].CPEM_CREDENCIAL;
+        let chave = result_empresa.recordset[0].CPEM_CHAVE;
+
+        extrato.extrato_recebidos_efetivados(credencial, chave)
+        .then(function (response) {
+            console.log(JSON.stringify(response.data));
+            res.json(response.data);
+        })
+        .catch(function (error) {
+            console.log(error);
+            throw next(new Error(error));
+        });
+
+    })()
+    .then(resp => console.log(resp))
+    .catch(err => console.log(err));
+});
+
+router.get('/conta/extrato/filtro_data', (req, res, next) => {
+
+    let empresa_cod = req.query.empresa;
+    let data_inicio = req.query.data_inicio;
+    let data_fim = req.query.data_fim;
+
+    data_inicio = data_inicio.replaceAll("-", "/");
+    data_fim = data_fim.replaceAll("-", "/");
+
+    (async () => {
+
+        const result_empresa = await querys.selectCredencialEmpresa(empresa_cod);
+
+        if (result_empresa.rowsAffected <= 0) {
+    
+            throw next(new Error('Empresa não encontrada!'));
+        }
+
+        let credencial = result_empresa.recordset[0].CPEM_CREDENCIAL;
+        let chave = result_empresa.recordset[0].CPEM_CHAVE;
+
+        extrato.extrato_recebimento_filtro_data(credencial, chave, data_inicio, data_fim)
+        .then(function (response) {
+            console.log(JSON.stringify(response.data));
+            res.json(response.data);
+        })
+        .catch(function (error) {
+            console.log(error);
+            throw next(new Error(error));
+        });
+
+    })()
+    .then(resp => console.log(resp))
+    .catch(err => console.log(err));
 });
 
 module.exports = router;
