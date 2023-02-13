@@ -19,8 +19,9 @@ router.get('/conta', (req, res, next) => {
         const result_empresa = await querys.selectCredencialEmpresa(empresa_cod);
 
         if (result_empresa.rowsAffected <= 0) {
-    
-            throw next(new Error('Empresa não encontrada!'));
+            
+            res.json({erro: 'Empresa não encontrada!'})
+            //throw next(new Error('Empresa não encontrada!'));
         }
 
         let credencial = result_empresa.recordset[0].CPEM_CREDENCIAL;
@@ -33,7 +34,8 @@ router.get('/conta', (req, res, next) => {
         })
         .catch(function (error) {
             console.log(error);
-            throw next(new Error(error));
+            res.json({erro: error});
+            //throw next(new Error(error));
         });
 
     })()
@@ -48,7 +50,8 @@ router.post('/conta', async (req, res, next) => {
     const empresa = await querys.getDadosEmpresa(empresa_cod);
 
     if (empresa.rowsAffected <= 0) {
-        throw next(new Error('Não foi encontrado os dados da empresa!'));
+        res.json({erro: 'Não foi encontrado os dados da empresa!'});
+        //throw next(new Error('Não foi encontrado os dados da empresa!'));
     }
 
     let dadosEmpresa = {
@@ -72,7 +75,8 @@ router.post('/conta', async (req, res, next) => {
     (async () => {
 
         if (!dadosEmpresa) {
-           throw next(new Error('Não foi passado os dados da empresa!'));
+            res.json({erro: 'Não foi passado os dados da empresa!'});
+            //throw next(new Error('Não foi passado os dados da empresa!'));
         }
 
         conta.criarContaDigital(dadosEmpresa)
@@ -116,8 +120,9 @@ router.post('/conta/documentos', async (req, res, next) => {
         const result_empresa = await querys.selectCredencialEmpresa(empresa_cod);
 
         if (result_empresa.rowsAffected <= 0) {
-    
-            throw next(new Error('Empresa não encontrada!'));
+            
+            res.json({erro: 'Empresa não encontrada!'});
+            //throw next(new Error('Empresa não encontrada!'));
         }
 
         credencial = result_empresa.recordset[0].CPEM_CREDENCIAL;
@@ -155,8 +160,9 @@ router.post('/conta/administrador', async (req, res, next) => {
         const result_empresa = await querys.selectCredencialEmpresa(empresa_cod);
 
         if (result_empresa.rowsAffected <= 0) {
-    
-            throw next(new Error('Empresa não encontrada!'));
+            
+            res.json({erro: 'Empresa não encontrada!'});
+            //throw next(new Error('Empresa não encontrada!'));
         }
 
         credencial = result_empresa.recordset[0].CPEM_CREDENCIAL;
@@ -190,8 +196,9 @@ router.get('/conta/administrador', (req, res, next) => {
         const result_empresa = await querys.selectCredencialEmpresa(empresa_cod);
 
         if (result_empresa.rowsAffected <= 0) {
-    
-            throw next(new Error('Empresa não encontrada!'));
+            
+            res.json({erro: 'Empresa não encontrada!'});
+            //throw next(new Error('Empresa não encontrada!'));
         }
 
         credencial = result_empresa.recordset[0].CPEM_CREDENCIAL;
@@ -264,8 +271,8 @@ router.post('/conta/add_saldo', async (req, res, next) => {
         const result_empresa = await querys.selectCredencialEmpresa(empresa_cod);
 
         if (result_empresa.rowsAffected <= 0) {
-    
-            throw next(new Error('Empresa não encontrada!'));
+            res.json({erro:'Empresa não encontrada!'});
+            //throw next(new Error('Empresa não encontrada!'));
         }
 
         credencial = result_empresa.recordset[0].CPEM_CREDENCIAL;
@@ -300,8 +307,8 @@ router.delete('/conta/administrador', async (req, res, next) => {
         const result_empresa = await querys.selectCredencialEmpresa(empresa_cod);
 
         if (result_empresa.rowsAffected <= 0) {
-    
-            throw next(new Error('Empresa não encontrada!'));
+            res.json({erro:'Empresa não encontrada!'});
+            //throw next(new Error('Empresa não encontrada!'));
         }
 
         credencial = result_empresa.recordset[0].CPEM_CREDENCIAL;
@@ -336,8 +343,9 @@ router.post('/conta/transferencia/doc_ted', async (req, res, next) => {
         const result_empresa = await querys.selectCredencialEmpresa(empresa_cod);
 
         if (result_empresa.rowsAffected <= 0) {
-    
-            throw next(new Error('Empresa não encontrada!'));
+            
+            res.json({erro: 'Empresa não encontrada!'});
+            //throw next(new Error('Empresa não encontrada!'));
         }
 
         credencial = result_empresa.recordset[0].CPEM_CREDENCIAL;
@@ -377,8 +385,9 @@ router.post('/conta/pagamento_codigo_barras', async (req, res, next) => {
         const result_empresa = await querys.selectCredencialEmpresa(empresa_cod);
 
         if (result_empresa.rowsAffected <= 0) {
-    
-            throw next(new Error('Empresa não encontrada!'));
+            
+            res.json({erro: 'Empresa não encontrada!'});
+            //throw next(new Error('Empresa não encontrada!'));
         }
 
         credencial = result_empresa.recordset[0].CPEM_CREDENCIAL;

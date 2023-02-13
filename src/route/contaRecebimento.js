@@ -20,8 +20,9 @@ router.get('/conta_recebimento', (req, res, next) => {
         const result_empresa = await querys.selectCredencialEmpresa(empresa_cod);
 
         if (result_empresa.rowsAffected <= 0) {
-    
-            throw next(new Error('Empresa não encontrada!'));
+            
+            res.json({erro: 'Empresa não encontrada!'});
+            //throw next(new Error('Empresa não encontrada!'));
         }
 
         let credencial = result_empresa.recordset[0].CPEM_CREDENCIAL;
@@ -34,7 +35,8 @@ router.get('/conta_recebimento', (req, res, next) => {
         })
         .catch(function (error) {
             console.log(error);
-            throw next(new Error(error));
+            res.json({erro: error});
+            //throw next(new Error(error));
         });
 
     })()
@@ -51,7 +53,8 @@ router.post('/conta_recebimento', async (req, res, next) => {
     const empresa = await querys.getDadosEmpresa(empresa_cod);
 
     if (empresa.rowsAffected <= 0) {
-        throw next(new Error('Não foi encontrado os dados da empresa!'));
+        res.json({erro:'Não foi encontrado os dados da empresa!'});
+        //throw next(new Error('Não foi encontrado os dados da empresa!'));
     }
 
     // const dadosBancarios = await querys.getDadosBancarios();
@@ -85,7 +88,8 @@ router.post('/conta_recebimento', async (req, res, next) => {
     (async () => {
 
         if (!dadosEmpresa) {
-           throw next(new Error('Não foi passado os dados da empresa!'));
+           res.json({erro: 'Não foi passado os dados da empresa!'});
+           //throw next(new Error('Não foi passado os dados da empresa!'));
         }
 
         conta.criarCredencialContaRecebimento(dadosEmpresa)
@@ -126,7 +130,8 @@ router.get('/conta/extrato', (req, res, next) => {
 
         if (result_empresa.rowsAffected <= 0) {
     
-            throw next(new Error('Empresa não encontrada!'));
+            res.json({erro:'Empresa não encontrada!'});
+            //throw next(new Error('Empresa não encontrada!'));
         }
 
         let credencial = result_empresa.recordset[0].CPEM_CREDENCIAL;
@@ -139,7 +144,8 @@ router.get('/conta/extrato', (req, res, next) => {
         })
         .catch(function (error) {
             console.log(error);
-            throw next(new Error(error));
+            res.json({erro: error});
+            //throw next(new Error(error));
         });
 
     })()
@@ -156,8 +162,9 @@ router.get('/conta/extrato/efetivamente_pagos', (req, res, next) => {
         const result_empresa = await querys.selectCredencialEmpresa(empresa_cod);
 
         if (result_empresa.rowsAffected <= 0) {
-    
-            throw next(new Error('Empresa não encontrada!'));
+            
+            res.json({erro: 'Empresa não encontrada!'});
+            //throw next(new Error('Empresa não encontrada!'));
         }
 
         let credencial = result_empresa.recordset[0].CPEM_CREDENCIAL;
@@ -170,7 +177,8 @@ router.get('/conta/extrato/efetivamente_pagos', (req, res, next) => {
         })
         .catch(function (error) {
             console.log(error);
-            throw next(new Error(error));
+            res.json({erro: error});
+            //throw next(new Error(error));
         });
 
     })()
@@ -193,7 +201,8 @@ router.get('/conta/extrato/filtro_data', (req, res, next) => {
 
         if (result_empresa.rowsAffected <= 0) {
     
-            throw next(new Error('Empresa não encontrada!'));
+            res.json({erro: 'Empresa não encontrada!'});
+            //throw next(new Error('Empresa não encontrada!'));
         }
 
         let credencial = result_empresa.recordset[0].CPEM_CREDENCIAL;
@@ -206,7 +215,8 @@ router.get('/conta/extrato/filtro_data', (req, res, next) => {
         })
         .catch(function (error) {
             console.log(error);
-            throw next(new Error(error));
+            res.json({erro: error});
+            //throw next(new Error(error));
         });
 
     })()

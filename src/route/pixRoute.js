@@ -28,7 +28,9 @@ router.post('/pix/pagamento', (req, res, next) => {
           const result_empresa = await querys.selectCredencialEmpresa(empresa_cod);
 
           if(result_empresa.rowsAffected <= 0){
-               throw next(new Error("Sem dados das credenciais dessa empresa!"));
+
+               res.json({erro: "Sem dados das credenciais dessa empresa!"});
+               //throw next(new Error("Sem dados das credenciais dessa empresa!"));
           }
 
           let credencial = result_empresa.recordset[0].CPEM_CREDENCIAL;
@@ -40,7 +42,8 @@ router.post('/pix/pagamento', (req, res, next) => {
 
 
           if(dados_pix.rowsAffected <= 0){
-              throw next(new Error("Problema ao buscar os dados do pix!"));
+              res.json({erro: "Problema ao buscar os dados do pix!"});
+              //throw next(new Error("Problema ao buscar os dados do pix!"));
           }
 
           let tipo_chave = dados_pix.recordset[0].CHPI_TIPO;
