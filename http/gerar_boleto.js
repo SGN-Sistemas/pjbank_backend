@@ -174,6 +174,31 @@ function impressaoBoletosCarne(credencial, chave, numeros_pedidos){
     return axios(config);
 }
 
+function impressaoBoletosCarneSemContaDigital(credencial, chave, numeros_pedidos){
+
+    var data = JSON.stringify({
+
+        "pedido_numero": [
+            ...numeros_pedidos
+        ],
+        "formato": "carne"
+    });
+
+    var config = {
+
+        method: 'post',
+        url: `https://sandbox.pjbank.com.br/recebimentos/${credencial}/transacoes/lotes`,
+        headers: { 
+            'X-CHAVE': `${chave}`, 
+            'Content-Type': 'application/json'
+        },
+        data : data
+    };
+
+    return axios(config);
+
+}
+
 function impressaoBoletosLoteSemContaDigital(credencial, chave, numeros_pedidos){
 
     var data = JSON.stringify({
@@ -278,6 +303,7 @@ function consultaBoletosPagamentosFiltros(credencial, chave, data_inicio, data_f
 }
 
 
+
 module.exports = {
 
     gerarBoletoSemPjbank,
@@ -289,5 +315,6 @@ module.exports = {
     consultaBoletosPagamentosFiltros,
     impressaoBoletosLoteSemContaDigital,
     invalidarBoletoSemContaVirtual,
-    impressaoBoletosCarne
+    impressaoBoletosCarne,
+    impressaoBoletosCarneSemContaDigital
 };

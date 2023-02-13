@@ -496,6 +496,54 @@ router.get('/boleto_reebimento', (req, res, next) => {
 
 });
 
+
+router.post('/boleto_recebimento/carne', (req, res, next) => {
+
+      let pedido_numero = req.query.pedido.split('-');
+      let empresa_cod = req.query.empresa;
+
+      (async () => {
+
+            await sql.connect(config_conexao.sqlConfig);
+
+            const result_empresa = await querys.selectCredencialEmpresa(empresa_cod);
+
+            if(result_empresa.rowsAffected <= 0){
+                  res.json({erro: "Sem dados das credenciais dessa empresa!"});
+                  //throw next(new Error("Sem dados das credenciais dessa empresa!"));
+            }
+
+            let credencial = result_empresa.recordset[0].CPEM_CREDENCIAL;
+            let chave = result_empresa.recordset[0].CPEM_CHAVE;
+            const result_id_unico = await querys.getBoletoCobrancaPjBank(pedido_numero);
+
+            console.log(result_id_unico);
+
+            if(result_id_unico.rowsAffected <= 0){
+                  res.json({erro: "Não foi encontrado o boleto de cobrança para este número de pedido!"});
+                  //throw next(new Error("Não foi encontrado o boleto de cobrança para este número de pedido!"));     
+            }
+
+            let id_unico = result_id_unico.recordset[0].BCPJ_ID_UNICO;
+
+            operacoes_boletos.impressaoBoletosCarneSemContaDigital(credencial, chave, id_unico)
+            .then(async function (response) {
+
+                  console.log(response.data);
+                  res.json(response.data);
+            })
+            .catch(function (error) {
+                  console.log(error);
+                  res.json(error);
+            });
+
+       })()
+       .then(resp => console.log("caiu no then",resp))
+       .catch(err => console.log("caiu no erro",err));
+
+});
+
+
 router.post('/boleto_recebimento/lote', (req, res, next) => {
 
     let pedido_numero = req.query.pedido.split('-');

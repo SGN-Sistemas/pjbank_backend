@@ -322,6 +322,210 @@ function transferenciaDocTed(credencial, chave, dados){
 
 }
 
+function criarSubcontaCartaoCorporativo(credencial, chave, dados_empresa){
+
+    var data = JSON.stringify({
+
+        "data_nascimento": dados_empresa.data_nascimento,
+        "sexo": dados_empresa.sexo,
+        "tipo": dados_empresa.tipo,
+        "valor": dados_empresa.valor,
+        "cnpj": dados_empresa.cnpj,
+        "nome_cartao": dados_empresa.nome_cartao,
+        "cep": dados_empresa.cep,
+        "endereco": dados_empresa.endereco,
+        "numero": dados_empresa.numero,
+        "bairro": dados_empresa.bairro,
+        "complemento": dados_empresa.complemento,
+        "cidade": dados_empresa.cidade,
+        "estado": dados_empresa.estado,
+        "ddd": dados_empresa.ddd,
+        "telefone": dados_empresa.telefone,
+        "email": dados_empresa.email
+    });
+
+    var config = {
+        method: 'post',
+        url: `https://sandbox.pjbank.com.br/contadigital/${credencial}/subcontas`,
+        headers: { 
+            'Content-Type': 'application/json', 
+            'X-CHAVE-CONTA': `${chave}`
+        },
+        data : data
+    };
+
+    return axios(config);
+
+}
+
+function consultarDadosSubconta(credencialConta, credencialSubconta , chave){
+
+    var config = {
+        method: 'get',
+        url: `https://sandbox.pjbank.com.br/contadigital/${credencialConta}/subcontas/${credencialSubconta}`,
+        headers: { 
+            'X-CHAVE-CONTA': `${chave}`, 
+            'Content-Type': 'application/json'
+        }
+    };
+
+    return axios(config);
+
+}
+
+function transferenciaContaSubconta(credencialConta, credencialSubconta, chave){
+
+    var data = JSON.stringify({
+        "lote": [
+            {
+                "subconta_destino": `${credencialSubconta}`,
+                "valor": "10.00",
+                "data_pagamento": "12/10/2020"
+            }
+        ]
+    });
+
+    var config = {
+        method: 'post',
+        url: `https://sandbox.pjbank.com.br/contadigital/${credencialConta}/transacoes`,
+        headers: { 
+            'X-CHAVE-CONTA': `${chave}`, 
+            'Content-Type': 'application/json'
+        },
+        data : data
+    };
+
+    return axios(config);
+
+}
+
+function criarTokenCartaoCredito(credencial, chave, dados){
+
+    var data = JSON.stringify({
+        "nome_cartao": dados.nome_cartao,
+        "numero_cartao": dados.numero_cartao,
+        "mes_vencimento": dados.mes_vencimento,
+        "ano_vencimento": dados.ano_vencimento,
+        "cpf_cartao": dados.cpf_cartao,
+        "email_cartao": dados.email_cartao,
+        "celular_cartao": dados.celular_cartao,
+        "codigo_cvv": dados.codigo_cvv
+    });
+
+    var config = {
+        method: 'post',
+        url: `https://api.pjbank.com.br/contadigital/${credencial}/recebimentos/tokens`,
+        headers: { 
+            'Content-Type': 'application/json', 
+            'X-CHAVE-CONTA': `${chave}`
+        },
+        data : data
+    };
+
+    return axios(config);
+
+}
+
+function criarTransacaoUtilizandoToken(credencial, chave, token_cartao, dados_operacao){
+
+    var data = JSON.stringify({
+        "descricao_pagamento": dados_operacao.descricao_pagamento,
+        "valor": dados_operacao.valor,
+        "parcelas": dados_operacao.parcelas,
+        "token_cartao": `${token_cartao}`
+    });
+
+    var config = {
+        method: 'post',
+        url: `https://api.pjbank.com.br/contadigital/${credencial}/recebimentos/transacoes`,
+        headers: { 
+            'X-CHAVE-CONTA': `${chave}`, 
+            'Content-Type': 'application/json'
+        },
+        data : data
+    };
+
+    return axios(config);
+
+}
+
+function criarTransacaoUtilizandoDadosCartao(credencial, chave, dados){
+
+    var data = JSON.stringify({
+
+        "numero_cartao": dados.numero_cartao,
+        "nome_cartao": dados.nome_cartao,
+        "mes_vencimento": dados.mes_vencimento,
+        "ano_vencimento": dados.ano_vencimento,
+        "cpf_cartao": dados.cpf_cartao,
+        "email_cartao": dados.email_cartao,
+        "celular_cartao": dados.celular_cartao,
+        "codigo_cvv": dados.codigo_cvv,
+        "valor": dados.valor,
+        "parcelas": dados.parcelas,
+        "descricao_pagamento": dados.descricao_pagamento
+    });
+
+    var config = {
+        method: 'post',
+        url: `https://api.pjbank.com.br/contadigital/${credencial}/recebimentos/transacoes`,
+        headers: { 
+            'Content-Type': 'application/json', 
+            'X-CHAVE-CONTA': `${chave}`
+        },
+        data : data
+    };
+
+    return axios(config);
+
+}
+
+function cancelarTransacao(credencialConta, credencialSubconta_ou_token, chave){
+
+    var data = '';
+
+    var config = {
+
+        method: 'delete',
+        url: `https://api.pjbank.com.br/contadigital/${credencialConta}/recebimentos/transacoes/${credencialSubconta_ou_token}`,
+        headers: { 
+            'X-CHAVE-CONTA': `${chave}`, 
+            'Content-Type': 'application/json'
+        },
+        data : data
+    };
+
+    return axios(config);
+
+}
+
+function transferenciaSubcontaConta(credencialConta, credencialSubconta, chave, data_vencimento, data_pagamento, valor){
+
+    var data = JSON.stringify({
+        "lote": [
+            {
+                "subconta_origem": `${credencialSubconta}`,
+                "valor": `${valor}`,
+                "data_vencimento": `${data_vencimento}`,
+                "data_pagamento": `${data_pagamento}`,
+                "conta_destino": `${credencialConta}`
+            }
+        ]
+    });
+
+    var config = {
+        method: 'post',
+        url: `https://sandbox.pjbank.com.br/contadigital/${credencialConta}/transacoes`,
+        headers: { 
+            'X-CHAVE-CONTA': `${chave}`, 
+            'Content-Type': 'application/json'
+        },
+        data : data
+    };
+
+    return axios(config);
+
+}
 
 module.exports = {  criarContaDigital,
                     extrato_recebimentos,
@@ -337,5 +541,13 @@ module.exports = {  criarContaDigital,
                     addDocumentoContaDigital,
                     criarCredencialContaRecebimento,
                     transferenciaDocTed,
-                    pagamentoComCodigoBarras
+                    pagamentoComCodigoBarras,
+                    consultarDadosSubconta,
+                    transferenciaContaSubconta,
+                    transferenciaSubcontaConta,
+                    criarSubcontaCartaoCorporativo,
+                    criarTokenCartaoCredito,
+                    criarTransacaoUtilizandoToken,
+                    criarTransacaoUtilizandoDadosCartao,
+                    cancelarTransacao
                 };
