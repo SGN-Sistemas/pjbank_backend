@@ -34,13 +34,13 @@ function credenciarContaRecebimento(dadosEmpresa){
         return axios(config);
 }
 
-function infoCredencial(){
+function infoCredencial(credencial, chave){
 
         var config = {
             method: 'get',
-            url: 'https://sandbox.pjbank.com.br/recebimentos/f81254c1324447552e77dd306201c1f3c723e1c0',
+            url: `https://sandbox.pjbank.com.br/recebimentos/${credencial}`,
             headers: { 
-                'X-CHAVE': 'e0bdd68a9fe7047367d9cc693e5e2482886a6549'
+                'X-CHAVE': `${chave}`
             }
         };
 

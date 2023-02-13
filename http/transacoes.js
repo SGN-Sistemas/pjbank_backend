@@ -1,7 +1,7 @@
 
 var axios = require('axios');
 
-function criarTransacao(){
+function criarTransacao(credencial, chave){
 
     var data = JSON.stringify({
     "lote": [
@@ -18,9 +18,9 @@ function criarTransacao(){
 
     var config = {
     method: 'post',
-    url: 'https://sandbox.pjbank.com.br/contadigital/f81254c1324447552e77dd306201c1f3c723e1c0/transacoes',
+    url: `https://sandbox.pjbank.com.br/contadigital/${credencial}/transacoes`,
     headers: { 
-        'X-CHAVE-CONTA': 'e0bdd68a9fe7047367d9cc693e5e2482886a6549', 
+        'X-CHAVE-CONTA': `${chave}`, 
         'Content-Type': 'application/json'
     },
     data : data

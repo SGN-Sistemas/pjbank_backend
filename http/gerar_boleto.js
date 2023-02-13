@@ -1,7 +1,7 @@
 var axios = require('axios');
 const { PreparedStatementError } = require('mssql');
 
-function gerarBoletoContaPjbank(){
+function gerarBoletoContaPjbank(credencial, chave){
 
     let composicao_array = [
         {servico: 'Pintura', preco: 300.00},
@@ -62,7 +62,7 @@ function gerarBoletoContaPjbank(){
     var config = {
 
         method: 'post',
-        url: 'https://sandbox.pjbank.com.br/contadigital/f81254c1324447552e77dd306201c1f3c723e1c0/recebimentos/transacoes',
+        url: `https://sandbox.pjbank.com.br/contadigital/${credencial}/recebimentos/transacoes`,
         headers: { 
             'Content-Type': 'application/json'
         },
@@ -79,7 +79,7 @@ function gerarBoletoContaPjbank(){
 
 }
 
-function gerarBoletoSemPjbank(){
+function gerarBoletoSemPjbank(credencial){
 
     var axios = require('axios');
 
@@ -114,7 +114,7 @@ function gerarBoletoSemPjbank(){
     var config = {
 
         method: 'post',
-        url: 'https://sandbox.pjbank.com.br/recebimentos/f81254c1324447552e77dd306201c1f3c723e1c0/transacoes',
+        url: `https://sandbox.pjbank.com.br/recebimentos/${credencial}/transacoes`,
         headers: { 
             'Content-Type': 'application/json'
         },

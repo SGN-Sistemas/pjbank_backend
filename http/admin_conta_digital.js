@@ -104,13 +104,13 @@ function addSaldoContaDigital(credencial, chave, valor){
         return axios(config);
 }
 
-function addPagamentosContaDigital(){
+function addPagamentosContaDigital(credencial, chave){
 
          var config = {
             method: 'get',
-            url: 'https://api.pjbank.com.br/contadigital/f81254c1324447552e77dd306201c1f3c723e1c0/pagamentos?data_inicio=08/26/2022&data_fim=08/30/2022&itensporpagina=50&status=realizadas',
+            url: `https://api.pjbank.com.br/contadigital/${credencial}/pagamentos?data_inicio=08/26/2022&data_fim=08/30/2022&itensporpagina=50&status=realizadas`,
             headers: { 
-                'X-CHAVE-CONTA': 'e0bdd68a9fe7047367d9cc693e5e2482886a6549'
+                'X-CHAVE-CONTA': `${chave}`
             }
         };
 
@@ -198,7 +198,7 @@ function statusCossioConta(credencial, chave, pessoa_email){
     return axios(config);
 }
 
-function pagamentoComPix(pix, tipo_pix){
+function pagamentoComPix(credencial, chave, pix, tipo_pix){
 
         var data = JSON.stringify({
 
@@ -217,9 +217,9 @@ function pagamentoComPix(pix, tipo_pix){
 
         var config = {
             method: 'post',
-            url: 'https://api.pjbank.com.br/contadigital/f81254c1324447552e77dd306201c1f3c723e1c0/transacoes',
+            url: `https://api.pjbank.com.br/contadigital/${credencial}/transacoes`,
             headers: { 
-                'X-CHAVE-CONTA': 'e0bdd68a9fe7047367d9cc693e5e2482886a6549', 
+                'X-CHAVE-CONTA': `${chave}`, 
                 'Content-Type': 'application/json'
             },
             data : data
@@ -234,13 +234,13 @@ function pagamentoComPix(pix, tipo_pix){
         });
 }
 
-function extrato_recebimentos(){
+function extrato_recebimentos(credencial, chave){
 
         var config = {
             method: 'get',
-            url: 'https://api.pjbank.com.br/contadigital/f81254c1324447552e77dd306201c1f3c723e1c0/recebimentos/transacoes',
+            url: `https://api.pjbank.com.br/contadigital/${credencial}/recebimentos/transacoes`,
             headers: { 
-                'X-CHAVE-CONTA': 'e0bdd68a9fe7047367d9cc693e5e2482886a6549'
+                'X-CHAVE-CONTA': `${chave}`
             }
         };
 
@@ -253,13 +253,13 @@ function extrato_recebimentos(){
         });
 }
 
-function extraRecebimentosEfetivamentePagos(){
+function extraRecebimentosEfetivamentePagos(credencial, chave){
 
         var config = {
         method: 'get',
-        url: 'https://api.pjbank.com.br/contadigital/f81254c1324447552e77dd306201c1f3c723e1c0/recebimentos/transacoes?pago=1',
+        url: `https://api.pjbank.com.br/contadigital/${credencial}/recebimentos/transacoes?pago=1`,
         headers: { 
-            'X-CHAVE-CONTA': 'e0bdd68a9fe7047367d9cc693e5e2482886a6549', 
+            'X-CHAVE-CONTA': `${chave}`, 
             'Content-Type': 'application/json'
         }
         };

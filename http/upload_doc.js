@@ -22,13 +22,13 @@ function upload_documento(credencial, chave){
    
 }
 
-function listaDocumentosContaDigital(){
+function listaDocumentosContaDigital(credencial, chave){
 
         var config = {
           method: 'get',
-          url: 'https://sandbox.pjbank.com.br/contadigital/f81254c1324447552e77dd306201c1f3c723e1c0/documentos',
+          url: `https://sandbox.pjbank.com.br/contadigital/${credencial}/documentos`,
           headers: { 
-            'X-CHAVE-CONTA': 'e0bdd68a9fe7047367d9cc693e5e2482886a6549'
+            'X-CHAVE-CONTA': `${chave}`
           }
         };
 
