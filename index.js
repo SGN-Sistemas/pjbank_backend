@@ -1,4 +1,5 @@
-require('express-async-errors')
+require('express-async-errors');
+require('dotenv/config');
 const express = require('express');
 const cors = require('cors');
 var bodyParser = require('body-parser');
@@ -24,5 +25,6 @@ app.use((error, req, res, next) => {
 });
 
 app.listen(9000, () => {
+     console.log(process.env.PRE_URL_PJBANK);
      console.log("Servidor rodando na porta 9000...");
 })

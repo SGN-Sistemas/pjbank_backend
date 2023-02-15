@@ -1,134 +1,86 @@
 var axios = require('axios');
+require('dotenv/config');
+
 const { PreparedStatementError } = require('mssql');
 
-function gerarBoletoContaPjbank(credencial, chave){
+// function gerarBoletoContaPjbank(credencial, chave){
 
-    let composicao_array = [
-        {servico: 'Pintura', preco: 300.00},
-        {servico: 'Instalação elétrica', preco: '850.00'},
-        {servico: 'Aplicação de gesso', preco: '380.00'}
-    ]
+//     let composicao_array = [
+//         {servico: 'Pintura', preco: 300.00},
+//         {servico: 'Instalação elétrica', preco: '850.00'},
+//         {servico: 'Aplicação de gesso', preco: '380.00'}
+//     ]
 
-    let max = 0;
+//     let max = 0;
 
-       composicao_array.forEach((atual) => {
+//        composicao_array.forEach((atual) => {
 
-            let t = atual.servico.length;
+//             let t = atual.servico.length;
 
-            if(t > max){
-                max = t;
-            }
+//             if(t > max){
+//                 max = t;
+//             }
 
-        });
+//         });
 
-        console.log('tamanho maximo string');
-        console.log(max)
+//         console.log('tamanho maximo string');
+//         console.log(max)
 
-        let tamanho = max;
+//         let tamanho = max;
 
-    let texto_total = composicao_array.reduce((acumulador, atual) => {
+//     let texto_total = composicao_array.reduce((acumulador, atual) => {
 
-            console.log(atual.servico.padEnd(tamanho,'.'));
+//             console.log(atual.servico.padEnd(tamanho,'.'));
 
-            let preco = atual.servico.padEnd(tamanho,'.') + '10.000,00'.padStart(61,'.');
+//             let preco = atual.servico.padEnd(tamanho,'.') + '10.000,00'.padStart(61,'.');
 
-            return acumulador += preco+'\n';
+//             return acumulador += preco+'\n';
 
-    }, '');
+//     }, '');
 
-    var data = JSON.stringify({
+//     var data = JSON.stringify({
 
-            "vencimento": "10/30/2022",
-            "valor": 30000.00,
-            "juros": 0,
-            "multa": 0,
-            "desconto": "",
-            "nome_cliente": "Cliente de Exemplo",
-            "cpf_cliente": "62936576000112",
-            "endereco_cliente": "Rua Joaquim Vilac",
-            "numero_cliente": "509",
-            "complemento_cliente": "",
-            "bairro_cliente": "Vila Teixeira",
-            "cidade_cliente": "Campinas",
-            "estado_cliente": "SP",
-            "cep_cliente": "13301510",
-            "logo_url": "http://wallpapercave.com/wp/xK64fR4.jpg",
-            "texto": texto_total,
-            "grupo": "Boletos",
-            "webhook": "https://node-express-deply-heroku.herokuapp.com/webhook",
-            "pedido_numero": "2351"
-    });
+//             "vencimento": "10/30/2022",
+//             "valor": 30000.00,
+//             "juros": 0,
+//             "multa": 0,
+//             "desconto": "",
+//             "nome_cliente": "Cliente de Exemplo",
+//             "cpf_cliente": "62936576000112",
+//             "endereco_cliente": "Rua Joaquim Vilac",
+//             "numero_cliente": "509",
+//             "complemento_cliente": "",
+//             "bairro_cliente": "Vila Teixeira",
+//             "cidade_cliente": "Campinas",
+//             "estado_cliente": "SP",
+//             "cep_cliente": "13301510",
+//             "logo_url": "http://wallpapercave.com/wp/xK64fR4.jpg",
+//             "texto": texto_total,
+//             "grupo": "Boletos",
+//             "webhook": "https://node-express-deply-heroku.herokuapp.com/webhook",
+//             "pedido_numero": "2351"
+//     });
 
-    var config = {
+//     var config = {
 
-        method: 'post',
-        url: `https://sandbox.pjbank.com.br/contadigital/${credencial}/recebimentos/transacoes`,
-        headers: { 
-            'Content-Type': 'application/json'
-        },
-        data : data
-    };
+//         method: 'post',
+//         url: `${process.env.PRE_URL_PJBANK}/contadigital/${credencial}/recebimentos/transacoes`,
+//         headers: { 
+//             'Content-Type': 'application/json'
+//         },
+//         data : data
+//     };
 
-    axios(config)
-    .then(function (response) {
-        console.log(JSON.stringify(response.data));
-    })
-    .catch(function (error) {
-        console.log(error);
-    });
+//     axios(config)
+//     .then(function (response) {
+//         console.log(JSON.stringify(response.data));
+//     })
+//     .catch(function (error) {
+//         console.log(error);
+//     });
 
-}
+// }
 
-function gerarBoletoSemPjbank(credencial){
-
-    var axios = require('axios');
-
-    var data = JSON.stringify({
-
-        "vencimento": "10/30/2022",
-        "valor": ".00",
-        "juros": "0",
-        "juros_fixo": "0",
-        "multa": "0",
-        "multa_fixo": "0",
-        "nome_cliente": "Cliente de Exemplo",
-        "email_cliente": "cliente.exemplo@pjbank.com.br",
-        "telefone_cliente": "1940096830",
-        "cpf_cliente": "62936576000112",
-        "endereco_cliente": "Rua Joaquim Vilac",
-        "numero_cliente": "509",
-        "bairro_cliente": "Vila Teixeira",
-        "cidade_cliente": "Campinas",
-        "estado_cliente": "SP",
-        "cep_cliente": "13301510",
-        "logo_url": "https://pjbank.com.br/assets/images/logo-pjbank.png",
-        "texto": "Texto opcional",
-        "instrucoes": "Este é um boleto de exemplo",
-        "instrucao_adicional": "Este boleto não deve ser pago pois é um exemplo",
-        "grupo": "Boletos001",
-        "webhook": "https://node-express-deply-heroku.herokuapp.com/webhook",
-        "pedido_numero": "89724",
-        "especie_documento": "DS"
-    });
-
-    var config = {
-
-        method: 'post',
-        url: `https://sandbox.pjbank.com.br/recebimentos/${credencial}/transacoes`,
-        headers: { 
-            'Content-Type': 'application/json'
-        },
-        data : data
-    };
-
-    axios(config)
-    .then(function (response) {
-        console.log(JSON.stringify(response.data));
-    })
-    .catch(function (error) {
-        console.log(error);
-    });
-}
 
 function impressaoBoletosLote(credencial, chave, numeros_pedidos){
 
@@ -139,7 +91,7 @@ function impressaoBoletosLote(credencial, chave, numeros_pedidos){
 
             var config = {
             method: 'post',
-            url: `https://sandbox.pjbank.com.br/contadigital/${credencial}/recebimentos/transacoes/lotes`,
+            url: `${process.env.PRE_URL_PJBANK}/contadigital/${credencial}/recebimentos/transacoes/lotes`,
             headers: { 
                 'Content-Type': 'application/json', 
                 'X-CHAVE-CONTA': `${chave}`
@@ -163,7 +115,7 @@ function impressaoBoletosCarne(credencial, chave, numeros_pedidos){
 
     var config = {
         method: 'post',
-        url: `https://sandbox.pjbank.com.br/contadigital/${credencial}/recebimentos/transacoes/lotes`,
+        url: `${process.env.PRE_URL_PJBANK}/contadigital/${credencial}/recebimentos/transacoes/lotes`,
         headers: { 
             'X-CHAVE-CONTA': `${chave}`,
             'Content-Type': 'application/json'
@@ -187,7 +139,7 @@ function impressaoBoletosCarneSemContaDigital(credencial, chave, numeros_pedidos
     var config = {
 
         method: 'post',
-        url: `https://sandbox.pjbank.com.br/recebimentos/${credencial}/transacoes/lotes`,
+        url: `${process.env.PRE_URL_PJBANK}/recebimentos/${credencial}/transacoes/lotes`,
         headers: { 
             'X-CHAVE': `${chave}`, 
             'Content-Type': 'application/json'
@@ -199,6 +151,31 @@ function impressaoBoletosCarneSemContaDigital(credencial, chave, numeros_pedidos
 
 }
 
+function consultarBoletosRecebimentoSemContaDigital(credencial, chave, dados){
+
+    const data_inicio = dados.data_inicio ? 'data_inicio='+dados.data_inicio : '';
+    const data_fim = dados.data_fim ? 'data_fim='+dados.data_fim : '';
+    const pago = (dados.pago || dados.pago == 0) ? 'pago='+dados.pago : '';
+    const pagina = dados.pagina ? 'pagina='+dados.pagina : '';
+
+    let filtros = (data_inicio || data_fim || pago || pagina) ? '?' : '';
+
+
+    filtros += ((data_inicio) ? data_inicio + '&' : '') + ((data_fim) ? data_fim + '&' : '') + ((pago) ? pago + '&' : '') + ((pagina) ? pagina + '&' : '');
+    filtros = filtros.substring(0, filtros.length - 1);
+    filtros = (filtros) ?? '';
+
+    var config = {
+            method: 'get',
+            url: `${process.env.PRE_URL_PJBANK}/recebimentos/${credencial}/transacoes${filtros}`,
+            headers: { 
+                'X-CHAVE': `${chave}`
+            }
+    };
+      
+      return axios(config);
+}
+
 function impressaoBoletosLoteSemContaDigital(credencial, chave, numeros_pedidos){
 
     var data = JSON.stringify({
@@ -208,10 +185,10 @@ function impressaoBoletosLoteSemContaDigital(credencial, chave, numeros_pedidos)
 
     var config = {
         method: 'post',
-        url: `https://sandbox.pjbank.com.br/contadigital/${credencial}/recebimentos/transacoes`,
+        url: `${process.env.PRE_URL_PJBANK}/recebimentos/${credencial}/transacoes/lotes`,
         headers: { 
-            'X-CHAVE-CONTA': `${chave}`,
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
+            'X-CHAVE': `${chave}`
         },
         data : data
     };
@@ -225,7 +202,7 @@ function invalidarBoleto(credencial, chave, pedido_numero){
 
             var config = {
             method: 'delete',
-            url: `https://sandbox.pjbank.com.br/contadigital/${credencial}/recebimentos/transacoes/${pedido_numero}`,
+            url: `${process.env.PRE_URL_PJBANK}/contadigital/${credencial}/recebimentos/transacoes/${pedido_numero}`,
             headers: { 
                 'X-CHAVE-CONTA': `${chave}`
             },
@@ -242,7 +219,7 @@ function invalidarBoletoSemContaVirtual(credencial, chave, pedido_numero){
 
     var config = {
         method: 'delete',
-        url: `https://sandbox.pjbank.com.br/recebimentos/${credencial}/transacoes/${pedido_numero}`,
+        url: `${process.env.PRE_URL_PJBANK}/recebimentos/${credencial}/transacoes/${pedido_numero}`,
         headers: { 
             'X-CHAVE': `${chave}`
         },
@@ -265,7 +242,7 @@ function consultaPagamentoBoleto(credencial, chave, id_unico){
 
             var config = {
             method: 'get',
-            url: `https://sandbox.pjbank.com.br/contadigital/${credencial}/recebimentos/transacoes/${id_unico}`,
+            url: `${process.env.PRE_URL_PJBANK}/contadigital/${credencial}/recebimentos/transacoes/${id_unico}`,
             headers: { 
                 'X-CHAVE-CONTA': `${chave}`
             }
@@ -279,7 +256,7 @@ function consultaBoletosRecebimentosFiltros(credencial, chave, data_inicio, data
 
     var config = {
         method: 'get',
-        url: `https://sandbox.pjbank.com.br/recebimentos/${credencial}/transacoes?data_inicio=${data_inicio}&data_fim=${data_fim}&pago=${pago}&pagina=${pagina}`,
+        url: `${process.env.PRE_URL_PJBANK}/recebimentos/${credencial}/transacoes?data_inicio=${data_inicio}&data_fim=${data_fim}&pago=${pago}&pagina=${pagina}`,
         headers: { 
             'X-CHAVE': `${chave}`
         }
@@ -293,7 +270,7 @@ function consultaBoletosPagamentosFiltros(credencial, chave, data_inicio, data_f
 
         var config = {
             method: 'get',
-            url: `https://sandbox.pjbank.com.br/contadigital/${credencial}/pagamentos?data_inicio=${data_inicio}&data_fim=${data_fim}&itensporpagina=${itensPorPagina}&pagina=${pagina}&status=${status}`,
+            url: `${process.env.PRE_URL_PJBANK}/contadigital/${credencial}/pagamentos?data_inicio=${data_inicio}&data_fim=${data_fim}&itensporpagina=${itensPorPagina}&pagina=${pagina}&status=${status}`,
             headers: { 
                 'X-CHAVE-CONTA': `${chave}`
             }
@@ -306,8 +283,6 @@ function consultaBoletosPagamentosFiltros(credencial, chave, data_inicio, data_f
 
 module.exports = {
 
-    gerarBoletoSemPjbank,
-    gerarBoletoContaPjbank,
     impressaoBoletosLote,
     invalidarBoleto,
     consultaPagamentoBoleto,
@@ -316,5 +291,6 @@ module.exports = {
     impressaoBoletosLoteSemContaDigital,
     invalidarBoletoSemContaVirtual,
     impressaoBoletosCarne,
-    impressaoBoletosCarneSemContaDigital
+    impressaoBoletosCarneSemContaDigital,
+    consultarBoletosRecebimentoSemContaDigital
 };

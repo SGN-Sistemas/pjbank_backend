@@ -2,7 +2,9 @@ const express = require('express');
 const axios = require('axios');
 const nodemailer = require('nodemailer');
 const sql = require('mssql');
-const download = require('../utils/dowload')
+require('dotenv/config');
+
+const download = require('../utils/dowload');
 
 const datas = require('../../src/datas_formatadas');
 const smtp = require('../../src/smtp/config_smtp');
@@ -130,34 +132,42 @@ router.post('/boleto', (req, res, next) => {
                               });
 
                               if(exists_boletos.rowsAffected[0] > 0){
-                                    res.json({erro: "Existem parcelas que já foram emitidas!"});
-                                    //throw next(new Error("Existem parcelas que já foram emitidas!"));
+                                    //res.json({erro: "Existem parcelas que já foram emitidas!"});
+                                    throw next(new Error("Existem parcelas que já foram emitidas!"));
                               }
 
                               var data = JSON.stringify({
                                     "cobrancas": [...array_parcelas]
                               });
 
+                              console.log('antes da requisição');
+
                               var config = {
                                     method: 'post',
-                                    url: `https://sandbox.pjbank.com.br/contadigital/${credencial}/recebimentos/transacoes`,
+                                    url: `${process.env.PRE_URL_PJBANK}/contadigital/${credencial}/recebimentos/transacoes`,
                                     headers: {
                                           'Content-Type': 'application/json'
                                     },
                                     data: data
                               };
 
+                              console.log('depois da requisição');
+
                               axios(config)
                                     .then(async function (response) {
+
+                                          console.log('entrou no then');
 
                                           let dados = null;
                                           console.log('teste');
                                           console.log(response.data);
 
                                           if(!response.data){
-                                                res.json({erro: "Problema na requisição!"});
-                                                //throw next(new Error("Problema na requisição!"));
+                                                //res.json({"erro": "Problema na requisição!"});
+                                                throw next(new Error("Problema na requisição!"));
                                           }
+
+                                          console.log('entrou no then 2');
 
                                           dados = response.data;
 
@@ -168,6 +178,8 @@ router.post('/boleto', (req, res, next) => {
 
                                           if (Array.isArray(response.data)) {
 
+                                                console.log('entrou no if do then');
+
                                                 response.data.filter(data => data.status != '400').forEach((boleto) => {
                                                             console.log(boleto)
                                                             obj_result.boleto.push({ id: cont, link: boleto.linkBoleto });
@@ -176,6 +188,8 @@ router.post('/boleto', (req, res, next) => {
                                                 });
 
                                           }else {
+
+                                                console.log('entrou no if do then 2');
 
                                                 obj_result.boleto.push({ id: cont, link: response.data.linkBoleto });
                                                 cont++;
@@ -193,6 +207,8 @@ router.post('/boleto', (req, res, next) => {
 
                                           // email_cliente
 
+                                          console.log('antes do email');
+
                                           if (email_req == 1) {
                                                 email.enviar_email('sac@sgnsistemas.com.br', email_cliente, 'Boletos gerados!', ('Links dos boletos: \n\n' + links_boletos), transporter);
                                           }
@@ -206,19 +222,26 @@ router.post('/boleto', (req, res, next) => {
 
                                           if (Array.isArray(dados)) {
 
+                                                console.log('entrou no if 2 do then');
+
                                                 dados.forEach(async (dado) => {
                                                       querys.atualizaBoletoBanco(dado);
                                                 });
 
                                           }else {
 
+                                                console.log('entrou no else 2 do then');
+
                                                 querys.atualizaBoletoBanco(dados);
                                                 console.log("Não é array");
                                           }
 
+                                          console.log('kkkkkk')
+
                                           obj_result.erro = [];
 
-                                          res.json(obj_result);
+
+                                          console.log('antes do pdf');
 
                                           obj_result.boleto.forEach(async (ele) => {
 
@@ -226,10 +249,17 @@ router.post('/boleto', (req, res, next) => {
 
                                           });
 
+                                          console.log('depois do pdf')
+
+                                          console.log(obj_result)
+
+                                          res.json(obj_result);
+
                                     })
                                     .catch(function (error) {
-                                          //throw next(new Error("Problema na requisição!"));
-                                          res.json(error);
+                                          throw next(new Error("Problema na requisição!"));
+                                          console.log('entrou nesse catch erro')
+                                          //res.json(error);
                                           console.log(error);
                                     });
 
@@ -335,7 +365,7 @@ router.post('/boleto', (req, res, next) => {
 
                                                 var config = {
                                                       method: 'post',
-                                                      url: `https://sandbox.pjbank.com.br/contadigital/${credencial}/recebimentos/transacoes`,
+                                                      url: `${process.env.PRE_URL_PJBANK}/contadigital/${credencial}/recebimentos/transacoes`,
                                                       headers: {
                                                             'Content-Type': 'application/json'
                                                       },
@@ -412,18 +442,20 @@ router.post('/boleto', (req, res, next) => {
                                                                   });
 
                                                                   res.json(obj_result);
+                                                                  
                                                             } else {
-                                                                  res.json({erro: "Problema na requisição!"});
-                                                                  //throw next(new Error("Problema na requisição!"));
+                                                                  //res.json({erro: "Problema na requisição!"});
+                                                                  throw next(new Error("Problema na requisição!"));
                                                             }
                                                       })
                                                       .catch(function (error) {
+                                                            throw next(new Error(error));
                                                             res.json(error);
                                                             console.log(error);
                                                       });
                                           } else {
-                                                res.json({erro: "Existem parcelas que já foram emitidas!"});
-                                                //throw next(new Error("Existem parcelas que já foram emitidas!"));
+                                                //res.json({erro: "Existem parcelas que já foram emitidas!"});
+                                                throw next(new Error("Existem parcelas que já foram emitidas!"));
                                           }
                                     })
                         }

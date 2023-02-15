@@ -2,6 +2,7 @@ var axios = require('axios');
 var FormData = require('form-data');
 var fs = require('fs');
 var data = new FormData();
+require('dotenv/config');
 
 function upload_documento(credencial, chave){
 
@@ -10,7 +11,7 @@ function upload_documento(credencial, chave){
 
     var config = {
       method: 'post',
-      url: `https://sandbox.pjbank.com.br/contadigital/${credencial}/documentos`,
+      url: `${process.env.PRE_URL_PJBANK}/contadigital/${credencial}/documentos`,
       headers: { 
           'X-CHAVE-CONTA': `${chave}`, 
           ...data.getHeaders()
@@ -26,7 +27,7 @@ function listaDocumentosContaDigital(credencial, chave){
 
         var config = {
           method: 'get',
-          url: `https://sandbox.pjbank.com.br/contadigital/${credencial}/documentos`,
+          url: `${process.env.PRE_URL_PJBANK}/contadigital/${credencial}/documentos`,
           headers: { 
             'X-CHAVE-CONTA': `${chave}`
           }

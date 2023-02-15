@@ -28,7 +28,7 @@ router.get('/conta_recebimento', (req, res, next) => {
         let credencial = result_empresa.recordset[0].CPEM_CREDENCIAL;
         let chave = result_empresa.recordset[0].CPEM_CHAVE;
 
-        conta.infoContaDigital(credencial, chave)
+        conta.infoContaCredencialSemContaDigital(credencial, chave)
         .then(function (response) {
             console.log(JSON.stringify(response.data));
             res.json(response.data);

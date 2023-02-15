@@ -79,7 +79,7 @@ const recebimentoBoleto = async (req, res, next) => {
 
                 }else{
 
-                    res.json({ "status": "501"});
+                    res.json({ "status": "501", "message": "Não conseguiu pegar o last id!"});
 
                     console.log("Não conseguiu pegar o last id!");
                 }
@@ -95,18 +95,18 @@ const recebimentoBoleto = async (req, res, next) => {
 
                 console.log("Baixou o recebimento!");
 
-                res.json({ "status": "200" });
+                res.json({ "status": "200", "message":  "Recebimento realizado com sucesso!"});
 
             }else{
 
                 console.log('Sem registros do BOLETO_COBRANCA_PJBANK');
-                res.json({ "status": "501"});
+                res.json({ "status": "501", "message": "Sem registros do BOLETO_COBRANCA_PJBANK"});
             }
 
         }else{
 
             console.log("Não existe ou está vazio o atributo data_pagamento no json do pjbank");              
-            res.json({ "status": "501"});
+            res.json({ "status": "501", "message": "Não existe ou está vazio o atributo data_pagamento no json do pjbank"});
         }
 
     } catch (err) {

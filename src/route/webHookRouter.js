@@ -29,7 +29,8 @@ router.put('/webhook/config', (req, res, next) => {
           const result_empresa = await querys.selectCredencialEmpresa(empresa_cod);
 
           if(result_empresa.rowsAffected <= 0){
-                throw next(new Error("Sem dados das credenciais dessa empresa!"));
+                //throw next(new Error("Sem dados das credenciais dessa empresa!"));
+                res.json({"erro": "Sem dados das credenciais dessa empresa!"});
           }
 
           let credencial = result_empresa.recordset[0].CPEM_CREDENCIAL;

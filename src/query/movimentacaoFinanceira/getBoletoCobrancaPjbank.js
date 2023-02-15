@@ -7,13 +7,12 @@ const getBoletoCobrancaPjbank = async (id_unico) => {
 
     const select_boleto_cobranca = await sql.query(`SELECT 
                                                         BCPJ_PEDIDO_NUMERO
-                                                FROM
+                                                    FROM
                                                         BOLETO_COBRANCA_PJBANK
-                                                WHERE
+                                                    WHERE
                                                         BCPJ_ID_UNICO = '${id_unico}'`);
 
    return select_boleto_cobranca;
 }
-
 
 module.exports = {getBoletoCobrancaPjbank};

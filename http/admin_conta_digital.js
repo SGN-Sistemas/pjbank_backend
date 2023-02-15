@@ -1,4 +1,5 @@
 var axios = require('axios');
+require('dotenv/config');
 
 function criarContaDigital(dadosEmpresa){
      
@@ -20,7 +21,7 @@ function criarContaDigital(dadosEmpresa){
 
         var config = {
             method: 'post',
-            url: 'https://api.pjbank.com.br/contadigital',
+            url: `${process.env.PRE_URL_PJBANK}/contadigital`,
             headers: { 
                 'Content-Type': 'application/json'
             },
@@ -55,7 +56,7 @@ function criarCredencialContaRecebimento(dadosEmpresa){
 
     var config = {
         method: 'post',
-        url: 'https://sandbox.pjbank.com.br/recebimentos',
+        url: `${process.env.PRE_URL_PJBANK}/recebimentos`,
         headers: { 
             'Content-Type': 'application/json',
             'Accept': 'application/json'
@@ -74,7 +75,7 @@ function addPessoaAdminContaDigital(credencial, chave, email){
         
         var config = {
             method: 'post',
-            url: `https://sandbox.pjbank.com.br/contadigital/${credencial}/administradores`,
+            url: `${process.env.PRE_URL_PJBANK}/contadigital/${credencial}/administradores`,
             headers: { 
             'X-CHAVE-CONTA': `${chave}`, 
             'Content-Type': 'application/json'
@@ -93,7 +94,7 @@ function addSaldoContaDigital(credencial, chave, valor){
 
         var config = {
           method: 'post',
-          url: `https://sandbox.pjbank.com.br/contadigital/${credencial}`,
+          url: `${process.env.PRE_URL_PJBANK}/contadigital/${credencial}`,
           headers: { 
             'X-CHAVE-CONTA': `${chave}`, 
             'Content-Type': 'application/json'
@@ -108,7 +109,7 @@ function addPagamentosContaDigital(credencial, chave){
 
          var config = {
             method: 'get',
-            url: `https://api.pjbank.com.br/contadigital/${credencial}/pagamentos?data_inicio=08/26/2022&data_fim=08/30/2022&itensporpagina=50&status=realizadas`,
+            url: `${process.env.PRE_URL_PJBANK}/contadigital/${credencial}/pagamentos?data_inicio=08/26/2022&data_fim=08/30/2022&itensporpagina=50&status=realizadas`,
             headers: { 
                 'X-CHAVE-CONTA': `${chave}`
             }
@@ -127,7 +128,7 @@ function listaAdminContaDigital(credencial, chave){
 
         var config = {
             method: 'get',
-            url: `https://sandbox.pjbank.com.br/contadigital/${credencial}/administradores`,
+            url: `${process.env.PRE_URL_PJBANK}/contadigital/${credencial}/administradores`,
             headers: { 
                 'X-CHAVE-CONTA': `${chave}`
             }
@@ -140,7 +141,7 @@ function infoContaDigital(credencial, chave){
 
         var config = {
           method: 'get',
-          url: `https://sandbox.pjbank.com.br/contadigital/${credencial}`,
+          url: `${process.env.PRE_URL_PJBANK}/contadigital/${credencial}`,
           headers: { 
             'X-CHAVE-CONTA': `${chave}`
           }
@@ -150,13 +151,27 @@ function infoContaDigital(credencial, chave){
         
 }
 
+function infoContaCredencialSemContaDigital(credencial, chave){
+
+    var config = {
+      method: 'get',
+      url: `${process.env.PRE_URL_PJBANK}/recebimentos/${credencial}`,
+      headers: { 
+        'X-CHAVE': `${chave}`
+      }
+    };
+
+   return  axios(config);
+    
+}
+
 function deletarPessoaContaDigital(credencial, chave, pessoa_email){
 
         var data = '';
 
         var config = {
             method: 'delete',
-            url: `https://sandbox.pjbank.com.br/contadigital/${credencial}/administradores/`+pessoa_email,
+            url: `${process.env.PRE_URL_PJBANK}/contadigital/${credencial}/administradores/`+pessoa_email,
             headers: { 
                 'X-CHAVE-CONTA': `${chave}`
             },
@@ -174,7 +189,7 @@ function pagamentoComCodigoBarras(credencial, chave, data){
 
     var config = {
         method: 'post',
-        url: `https://sandbox.pjbank.com.br/contadigital/${credencial}/transacoes`,
+        url: `${process.env.PRE_URL_PJBANK}/contadigital/${credencial}/transacoes`,
         headers: { 
             'X-CHAVE-CONTA': `${chave}`, 
             'Content-Type': 'application/json'
@@ -189,7 +204,7 @@ function statusCossioConta(credencial, chave, pessoa_email){
 
     var config = {
         method: 'get',
-        url: `https://sandbox.pjbank.com.br/contadigital/${credencial}/administradores/` + pessoa_email,
+        url: `${process.env.PRE_URL_PJBANK}/contadigital/${credencial}/administradores/` + pessoa_email,
         headers: { 
             'X-CHAVE-CONTA': `${chave}`
         }
@@ -217,7 +232,7 @@ function pagamentoComPix(credencial, chave, pix, tipo_pix){
 
         var config = {
             method: 'post',
-            url: `https://api.pjbank.com.br/contadigital/${credencial}/transacoes`,
+            url: `${process.env.PRE_URL_PJBANK}/contadigital/${credencial}/transacoes`,
             headers: { 
                 'X-CHAVE-CONTA': `${chave}`, 
                 'Content-Type': 'application/json'
@@ -238,7 +253,7 @@ function extrato_recebimentos(credencial, chave){
 
         var config = {
             method: 'get',
-            url: `https://api.pjbank.com.br/contadigital/${credencial}/recebimentos/transacoes`,
+            url: `${process.env.PRE_URL_PJBANK}/contadigital/${credencial}/recebimentos/transacoes`,
             headers: { 
                 'X-CHAVE-CONTA': `${chave}`
             }
@@ -256,12 +271,12 @@ function extrato_recebimentos(credencial, chave){
 function extraRecebimentosEfetivamentePagos(credencial, chave){
 
         var config = {
-        method: 'get',
-        url: `https://api.pjbank.com.br/contadigital/${credencial}/recebimentos/transacoes?pago=1`,
-        headers: { 
-            'X-CHAVE-CONTA': `${chave}`, 
-            'Content-Type': 'application/json'
-        }
+            method: 'get',
+            url: `${process.env.PRE_URL_PJBANK}/contadigital/${credencial}/recebimentos/transacoes?pago=1`,
+            headers: { 
+                'X-CHAVE-CONTA': `${chave}`, 
+                'Content-Type': 'application/json'
+            }
         };
 
         axios(config)
@@ -277,7 +292,7 @@ function addDocumentoContaDigital(credencial, chave, data){
 
     var config = {
         method: 'post',
-        url: `https://sandbox.pjbank.com.br/contadigital/${credencial}/documentos`,
+        url: `${process.env.PRE_URL_PJBANK}/contadigital/${credencial}/documentos`,
         headers: { 
             'X-CHAVE-CONTA': `${chave}`, 
             ...data.getHeaders()
@@ -310,7 +325,7 @@ function transferenciaDocTed(credencial, chave, dados){
 
     var config = {
         method: 'post',
-        url: `https://sandbox.pjbank.com.br/contadigital/${credencial}/transacoes`,
+        url: `${process.env.PRE_URL_PJBANK}/contadigital/${credencial}/transacoes`,
         headers: { 
             'X-CHAVE-CONTA': `${chave}`, 
             'Content-Type': 'application/json'
@@ -346,7 +361,7 @@ function criarSubcontaCartaoCorporativo(credencial, chave, dados_empresa){
 
     var config = {
         method: 'post',
-        url: `https://sandbox.pjbank.com.br/contadigital/${credencial}/subcontas`,
+        url: `${process.env.PRE_URL_PJBANK}/contadigital/${credencial}/subcontas`,
         headers: { 
             'Content-Type': 'application/json', 
             'X-CHAVE-CONTA': `${chave}`
@@ -362,7 +377,7 @@ function consultarDadosSubconta(credencialConta, credencialSubconta , chave){
 
     var config = {
         method: 'get',
-        url: `https://sandbox.pjbank.com.br/contadigital/${credencialConta}/subcontas/${credencialSubconta}`,
+        url: `${process.env.PRE_URL_PJBANK}/contadigital/${credencialConta}/subcontas/${credencialSubconta}`,
         headers: { 
             'X-CHAVE-CONTA': `${chave}`, 
             'Content-Type': 'application/json'
@@ -387,7 +402,7 @@ function transferenciaContaSubconta(credencialConta, credencialSubconta, chave){
 
     var config = {
         method: 'post',
-        url: `https://sandbox.pjbank.com.br/contadigital/${credencialConta}/transacoes`,
+        url: `${process.env.PRE_URL_PJBANK}/contadigital/${credencialConta}/transacoes`,
         headers: { 
             'X-CHAVE-CONTA': `${chave}`, 
             'Content-Type': 'application/json'
@@ -414,7 +429,7 @@ function criarTokenCartaoCredito(credencial, chave, dados){
 
     var config = {
         method: 'post',
-        url: `https://api.pjbank.com.br/contadigital/${credencial}/recebimentos/tokens`,
+        url: `${process.env.PRE_URL_PJBANK}/contadigital/${credencial}/recebimentos/tokens`,
         headers: { 
             'Content-Type': 'application/json', 
             'X-CHAVE-CONTA': `${chave}`
@@ -437,7 +452,7 @@ function criarTransacaoUtilizandoToken(credencial, chave, token_cartao, dados_op
 
     var config = {
         method: 'post',
-        url: `https://api.pjbank.com.br/contadigital/${credencial}/recebimentos/transacoes`,
+        url: `${process.env.PRE_URL_PJBANK}/contadigital/${credencial}/recebimentos/transacoes`,
         headers: { 
             'X-CHAVE-CONTA': `${chave}`, 
             'Content-Type': 'application/json'
@@ -468,7 +483,7 @@ function criarTransacaoUtilizandoDadosCartao(credencial, chave, dados){
 
     var config = {
         method: 'post',
-        url: `https://api.pjbank.com.br/contadigital/${credencial}/recebimentos/transacoes`,
+        url: `${process.env.PRE_URL_PJBANK}/contadigital/${credencial}/recebimentos/transacoes`,
         headers: { 
             'Content-Type': 'application/json', 
             'X-CHAVE-CONTA': `${chave}`
@@ -487,7 +502,7 @@ function cancelarTransacao(credencialConta, credencialSubconta_ou_token, chave){
     var config = {
 
         method: 'delete',
-        url: `https://api.pjbank.com.br/contadigital/${credencialConta}/recebimentos/transacoes/${credencialSubconta_ou_token}`,
+        url: `${process.env.PRE_URL_PJBANK}/contadigital/${credencialConta}/recebimentos/transacoes/${credencialSubconta_ou_token}`,
         headers: { 
             'X-CHAVE-CONTA': `${chave}`, 
             'Content-Type': 'application/json'
@@ -515,7 +530,7 @@ function transferenciaSubcontaConta(credencialConta, credencialSubconta, chave, 
 
     var config = {
         method: 'post',
-        url: `https://sandbox.pjbank.com.br/contadigital/${credencialConta}/transacoes`,
+        url: `${process.env.PRE_URL_PJBANK}/contadigital/${credencialConta}/transacoes`,
         headers: { 
             'X-CHAVE-CONTA': `${chave}`, 
             'Content-Type': 'application/json'
@@ -549,5 +564,6 @@ module.exports = {  criarContaDigital,
                     criarTokenCartaoCredito,
                     criarTransacaoUtilizandoToken,
                     criarTransacaoUtilizandoDadosCartao,
-                    cancelarTransacao
+                    cancelarTransacao,
+                    infoContaCredencialSemContaDigital
                 };

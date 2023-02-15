@@ -17,7 +17,9 @@ const selectCredencialEmpresa = async (empresa) => {
                                         FROM
                                                 CREDENCIAL_PJBANK_EMPRESA
                                         WHERE
-                                                CPEM_EMPR_COD = ${empresa}`;
+                                                CPEM_EMPR_COD = ${empresa}
+                                        AND
+                                                CPEM_PRODUCAO = 'N'`;
     return result;
 
   } catch (err) {

@@ -1,4 +1,5 @@
 var axios = require('axios');
+require('dotenv/config');
 
 function pagamentoComPix(credencial, chave, dados) {
 
@@ -10,7 +11,7 @@ function pagamentoComPix(credencial, chave, dados) {
 
     var config = {
         method: 'post',
-        url: `https://sandbox.pjbank.com.br/contadigital/${credencial}/transacoes`,
+        url: `${process.env.PRE_URL_PJBANK}/contadigital/${credencial}/transacoes`,
         headers: {
             'X-CHAVE-CONTA': `${chave}`,
             'Content-Type': 'application/json'

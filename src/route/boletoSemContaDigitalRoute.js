@@ -2,7 +2,8 @@ const express = require('express');
 const axios = require('axios');
 const nodemailer = require('nodemailer');
 const sql = require('mssql');
-const download = require('../utils/dowload')
+require('dotenv/config');
+const download = require('../utils/dowload');
 
 const datas = require('../../src/datas_formatadas');
 const smtp = require('../../src/smtp/config_smtp');
@@ -14,6 +15,7 @@ const utilitarios = require('../utilitarios/verificaExisteEmpresaIgual');
 const download_pdf = require('../utilitarios/download_pdf.js');
 const { json } = require('body-parser');
 const { HttpProxy } = require('vite');
+const { route } = require('./contaRecebimento');
 
 const router = express.Router();
 
@@ -48,6 +50,8 @@ router.post('/boleto_recebimento', (req, res, next) => {
                   try {
 
                         const dados_cobranca = await querys.dadosCobrancaTrParcelaRc(codigos);
+
+                        console.log(dados_cobranca);
 
                         let igual = utilitarios.verificaExisteClienteIgual(dados_cobranca.recordset);
 
@@ -136,23 +140,31 @@ router.post('/boleto_recebimento', (req, res, next) => {
                                     return obj;
                               });
 
+                              console.log("Depois do map");
+
                               if(exists_boletos.rowsAffected[0] > 0){
-                                    res.json({erro: "Existem parcelas que já foram emitidas!"});
-                                    //throw next(new Error("Existem parcelas que já foram emitidas!"));
+                                    //res.json({erro: "Existem parcelas que já foram emitidas!"});
+                                    throw next(new Error("Existem parcelas que já foram emitidas!"));
                               }
 
                               var data = JSON.stringify({
                                     "cobrancas": [...array_parcelas]
                               });
 
+                              console.log(data);
+
                               var config = {
                                     method: 'post',
-                                    url: `https://sandbox.pjbank.com.br/recebimentos/${credencial}/transacoes`,
+                                    url: `${process.env.PRE_URL_PJBANK}/recebimentos/${credencial}/transacoes`,
                                     headers: {
                                           'Content-Type': 'application/json'
                                     },
                                     data: data
                               };
+
+                              console.log(process.env.PRE_URL_PJBANK);
+
+                              console.log(config);
 
                               axios(config)
                                     .then(async function (response) {
@@ -164,8 +176,8 @@ router.post('/boleto_recebimento', (req, res, next) => {
                                           console.log(response.data);
 
                                           if(!response.data){
-                                                res.json({erro: "Problema na requisição!"});
-                                                //throw next(new Error("Problema na requisição!"));
+                                                //res.json({erro: "Problema na requisição!"});
+                                                throw next(new Error("Problema na requisição!"));
                                           }
 
                                           dados = response.data;
@@ -227,16 +239,17 @@ router.post('/boleto_recebimento', (req, res, next) => {
 
                                           obj_result.erro = [];
 
-                                          res.json(obj_result);
-
                                           obj_result.boleto.forEach(async (ele) => {
 
                                                 download_pdf.downloadPdf(ele.link, '/home/matheus/Matheus - Projetos PJbank/Backend-pjbank/pjbank_backend/downloads', '');
 
                                           });
 
+                                          res.json(obj_result);
+
                                     })
                                     .catch(function (error) {
+                                          console.log('entrou no catch');
                                           res.json(error);
                                           console.log(error);
                                     });
@@ -347,7 +360,7 @@ router.post('/boleto_recebimento', (req, res, next) => {
 
                                                 var config = {
                                                       method: 'post',
-                                                      url: `https://sandbox.pjbank.com.br/recebimentos/${credencial}/transacoes`,
+                                                      url: `${process.env.PRE_URL_PJBANK}/recebimentos/${credencial}/transacoes`,
                                                       headers: {
                                                             'Content-Type': 'application/json'
                                                       },
@@ -425,8 +438,8 @@ router.post('/boleto_recebimento', (req, res, next) => {
 
                                                                   res.json(obj_result);
                                                             } else {
-                                                                  res.json({erro: "Problema na requisição!"});
-                                                                  //throw next(new Error("Problema na requisição!"));
+                                                                  //res.json({erro: "Problema na requisição!"});
+                                                                  throw next(new Error("Problema na requisição!"));
                                                             }
 
                                                       })
@@ -435,8 +448,8 @@ router.post('/boleto_recebimento', (req, res, next) => {
                                                             console.log(error);
                                                       });
                                           } else {
-                                                res.json({erro: "Existem parcelas que já foram emitidas!"})
-                                                //throw next(new Error("Existem parcelas que já foram emitidas!"));
+                                                //res.json({erro: "Existem parcelas que já foram emitidas!"})
+                                                throw next(new Error("Existem parcelas que já foram emitidas!"));
                                           }
                                     })
                         }
@@ -449,53 +462,6 @@ router.post('/boleto_recebimento', (req, res, next) => {
 
       })()
 });
-
-router.get('/boleto_reebimento', (req, res, next) => {
-
-            let pedido_numero = req.query.pedido;
-            let empresa_cod = req.query.empresa;
-
-            (async () => {
-
-                  await sql.connect(config_conexao.sqlConfig);
-
-                  const result_empresa = await querys.selectCredencialEmpresa(empresa_cod);
-
-                  if(result_empresa.rowsAffected <= 0){
-                        res.json({erro: "Sem dados das credenciais dessa empresa!"});
-                        //throw next(new Error("Sem dados das credenciais dessa empresa!"));
-                  }
-
-                  let credencial = result_empresa.recordset[0].CPEM_CREDENCIAL;
-                  let chave = result_empresa.recordset[0].CPEM_CHAVE;
-                  const result_id_unico = await querys.getBoletoCobrancaPjBank(pedido_numero);
-
-                  console.log(result_id_unico);
-
-                  if(result_id_unico.rowsAffected <= 0){
-                        res.json({erro: "Não foi encontrado o boleto de cobrança para este número de pedido!"});
-                        //throw next(new Error("Não foi encontrado o boleto de cobrança para este número de pedido!"));     
-                  }
-
-                  let id_unico = result_id_unico.recordset[0].BCPJ_ID_UNICO;
-
-                  operacoes_boletos.consultaPagamentoBoleto(credencial, chave, id_unico)
-                  .then(async function (response) {
-
-                        console.log(response.data);
-                        res.json(response.data);
-                  })
-                  .catch(function (error) {
-                        console.log(error);
-                        res.json(error);
-                  });
-
-             })()
-             .then(resp => console.log("caiu no then",resp))
-             .catch(err => console.log("caiu no erro",err));
-
-});
-
 
 router.post('/boleto_recebimento/carne', (req, res, next) => {
 
@@ -533,8 +499,8 @@ router.post('/boleto_recebimento/carne', (req, res, next) => {
                   res.json(response.data);
             })
             .catch(function (error) {
-                  console.log(error);
-                  res.json(error);
+                  console.log(error.response.data);
+                  res.json(error.response.data);
             });
 
        })()
@@ -555,11 +521,8 @@ router.post('/boleto_recebimento/lote', (req, res, next) => {
 
           const result_empresa = await querys.selectCredencialEmpresa(empresa_cod);
 
-      //     const result_empresa = await querys.selectCredencialEmpresaSemContaDigital(empresa_cod);
-
           if(result_empresa.rowsAffected <= 0){
             res.json({"erro":"Sem dados das credenciais dessa empresa!"});
-            //    throw new Error("Sem dados das credenciais dessa empresa!");
           }
 
           let credencial = result_empresa.recordset[0].CPEM_CREDENCIAL;
@@ -570,7 +533,6 @@ router.post('/boleto_recebimento/lote', (req, res, next) => {
 
           if(dadosCobranca.rowsAffected <= 0){
                 res.json({"erro": "Não foi encontrado o boleto de cobrança para estes números de pedido!"});
-                //throw next(new Error("Não foi encontrado o boleto de cobrança para estes números de pedido!"));
           }
 
           let numeros_pedidos = dadosCobranca.recordset.map(item => item.BCPJ_PEDIDO_NUMERO);
@@ -581,7 +543,6 @@ router.post('/boleto_recebimento/lote', (req, res, next) => {
                 res.json(response.data);
           })
           .catch(function (error) {
-                console.log('entrou no catch');
                 console.log(error.response.data);
                 res.json(error.response.data);
           });
@@ -605,7 +566,6 @@ router.delete('/boleto_recebimento', (req, res, next) => {
 
           if(result_empresa.rowsAffected <= 0){
                 res.json({erro: "Sem dados das credenciais dessa empresa!"});
-                //throw next(new Error("Sem dados das credenciais dessa empresa!"));
           }
 
           let credencial = result_empresa.recordset[0].CPEM_CREDENCIAL;
@@ -626,5 +586,45 @@ router.delete('/boleto_recebimento', (req, res, next) => {
     .catch(err => console.log(err));
 
 });
+
+router.get('/boleto_recebimento/consulta_boletos', (req, res, next) => {
+
+      let empresa_cod = req.query.empresa;
+      let dados = req.body;
+
+      console.log('Exibiçção dos dados: ');
+      console.log(dados);
+
+      (async () => {
+
+            await sql.connect(config_conexao.sqlConfig);
+
+            const result_empresa = await querys.selectCredencialEmpresa(empresa_cod);
+
+            if(result_empresa.rowsAffected <= 0){
+                  res.json({erro: "Sem dados das credenciais dessa empresa!"});
+            }
+
+            let credencial = result_empresa.recordset[0].CPEM_CREDENCIAL;
+            let chave = result_empresa.recordset[0].CPEM_CHAVE;
+
+            operacoes_boletos.consultarBoletosRecebimentoSemContaDigital(credencial, chave, dados)
+            .then(async function (response) {
+
+                  console.log(response.data);
+                  res.json(response.data);
+            })
+            .catch(function (error) {
+                  console.log(error);
+                  res.json(error);
+            });
+
+       })()
+       .then(resp => console.log("caiu no then",resp))
+       .catch(err => console.log("caiu no erro",err));
+
+});
+
+
 
 module.exports = router;
