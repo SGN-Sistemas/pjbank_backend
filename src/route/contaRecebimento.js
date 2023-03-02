@@ -34,8 +34,8 @@ router.get('/conta_recebimento', (req, res, next) => {
             res.json(response.data);
         })
         .catch(function (error) {
-            console.log(error);
-            res.json({erro: error});
+            console.log(error.response.data);
+            res.json({erro: error.response.data});
             //throw next(new Error(error));
         });
 
@@ -48,23 +48,34 @@ router.post('/conta_recebimento', async (req, res, next) => {
 
     const empresa_cod = req.query.empresa;
 
+    let dados_body = req.body;
+
     console.log(empresa_cod);
 
     const empresa = await querys.getDadosEmpresa(empresa_cod);
 
     if (empresa.rowsAffected <= 0) {
-        res.json({erro:'Não foi encontrado os dados da empresa!'});
-        //throw next(new Error('Não foi encontrado os dados da empresa!'));
+        //res.json({erro:'Não foi encontrado os dados da empresa!'});
+        throw next(new Error('Não foi encontrado os dados da empresa!'));
     }
 
     // const dadosBancarios = await querys.getDadosBancarios();
 
+    // let dadosBanco = {
+    //     "conta_repasse": "99999-9",
+    //     "agencia_repasse": "0001",
+    //     "banco_repasse": "001",
+    //     "agencia": "0000"
+    // };
+
     let dadosBanco = {
-        "conta_repasse": "99999-9",
-        "agencia_repasse": "0001",
-        "banco_repasse": "001",
+        "conta_repasse": dados_body.conta_repasse,
+        "agencia_repasse": dados_body.agencia_repasse,
+        "banco_repasse": dados_body.banco_repasse,
         "agencia": "0000"
     };
+
+    console.log(dadosBanco);
 
     let dadosEmpresa = {
         "nome_empresa": empresa.recordset[0].EMPR_NOME,
@@ -82,6 +93,8 @@ router.post('/conta_recebimento', async (req, res, next) => {
         "cep": limpaMascaras.limpaMascaraCEP(empresa.recordset[0].EMPR_CEP),
         "agencia": dadosBanco.agencia
     };
+
+    console.log(dadosEmpresa);
 
     let credencial_obj = {};
 

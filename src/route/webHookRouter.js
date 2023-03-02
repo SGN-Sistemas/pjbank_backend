@@ -41,10 +41,12 @@ router.put('/webhook/config', (req, res, next) => {
 
           criarEditarWebHook(credencial, chave, url)
           .then(function (response) {
+                console.log('entrou no then')
                 console.log(JSON.stringify(response.data));
                 res.json(response.data);
           })
           .catch(function (error) {
+                console.log('entrou no catch')
                 console.log(error);
                 res.json(error);
                 // throw next(new Error(error));

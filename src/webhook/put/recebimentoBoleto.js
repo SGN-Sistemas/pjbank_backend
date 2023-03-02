@@ -26,6 +26,8 @@ const recebimentoBoleto = async (req, res, next) => {
         let data_pagamento = '';
         let saldo = 0;
 
+        console.log(req.body);
+
         if (req.body.data_pagamento) {
 
             let data_array = req.body.data_pagamento.split('\/');

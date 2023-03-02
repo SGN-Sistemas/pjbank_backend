@@ -9,6 +9,7 @@ function criarEditarWebHook(credencial, chave, url){
 
     var config = {
       method: 'put',
+      maxBodyLength: Infinity,
       url: `${process.env.PRE_URL_PJBANK}/contadigital/${credencial}`,
       headers: { 
         'X-CHAVE-CONTA': `${chave}`, 

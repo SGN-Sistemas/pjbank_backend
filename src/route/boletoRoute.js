@@ -257,10 +257,10 @@ router.post('/boleto', (req, res, next) => {
 
                                     })
                                     .catch(function (error) {
-                                          throw next(new Error("Problema na requisição!"));
+                                          //throw next(new Error("Problema na requisição!"));
                                           console.log('entrou nesse catch erro')
-                                          //res.json(error);
-                                          console.log(error);
+                                          res.json(error.response.data);
+                                          console.log(error.response.data);
                                     });
 
                         } else {
@@ -449,9 +449,9 @@ router.post('/boleto', (req, res, next) => {
                                                             }
                                                       })
                                                       .catch(function (error) {
-                                                            throw next(new Error(error));
-                                                            res.json(error);
-                                                            console.log(error);
+                                                            console.log('entrou nesse catch erro')
+                                                            res.json(error.response.data);
+                                                            console.log(error.response.data);
                                                       });
                                           } else {
                                                 //res.json({erro: "Existem parcelas que já foram emitidas!"});
@@ -592,7 +592,7 @@ router.get('/boleto/carne', (req, res, next) => {
 
             let numeros_pedidos = dadosCobranca.recordset.map(item => item.BCPJ_PEDIDO_NUMERO);
 
-            operacoes_boletos.impressaoBoletosCarne(credencial, chave, numeros_pedidos)
+            operacoes_boletos.impressaoBoletosCarne(credencial, chave, pedido_numero)
             .then(function (response) {
                   console.log(JSON.stringify(response.data));
                   res.json(response.data);
