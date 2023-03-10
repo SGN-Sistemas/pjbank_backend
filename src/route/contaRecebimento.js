@@ -5,6 +5,7 @@ const conta = require('../../http/admin_conta_digital');
 const extrato = require('../../http/extrato');
 const querys = require('../query/index');
 const limpaMascaras = require('../utilitarios/retiraMascaras/limpaMascara');
+const {criptografar, descriptografar} = require('../utilitarios/criptografia');
 
 var axios = require('axios');
 var FormData = require('form-data');
@@ -44,88 +45,105 @@ router.get('/conta_recebimento', (req, res, next) => {
     .catch(err => console.log(err));
 });
 
-router.post('/conta_recebimento', async (req, res, next) => {
+
+router.post('/conta_recebimento', (req, res, next) => {
 
     const empresa_cod = req.query.empresa;
 
-    let dados_body = req.body;
-
-    console.log(empresa_cod);
-
-    const empresa = await querys.getDadosEmpresa(empresa_cod);
-
-    if (empresa.rowsAffected <= 0) {
-        //res.json({erro:'Não foi encontrado os dados da empresa!'});
-        throw next(new Error('Não foi encontrado os dados da empresa!'));
-    }
-
-    // const dadosBancarios = await querys.getDadosBancarios();
-
-    // let dadosBanco = {
-    //     "conta_repasse": "99999-9",
-    //     "agencia_repasse": "0001",
-    //     "banco_repasse": "001",
-    //     "agencia": "0000"
-    // };
-
-    let dadosBanco = {
-        "conta_repasse": dados_body.conta_repasse,
-        "agencia_repasse": dados_body.agencia_repasse,
-        "banco_repasse": dados_body.banco_repasse,
-        "agencia": "0000"
-    };
-
-    console.log(dadosBanco);
-
-    let dadosEmpresa = {
-        "nome_empresa": empresa.recordset[0].EMPR_NOME,
-        "conta_repasse": dadosBanco.conta_repasse,
-        "agencia_repasse": dadosBanco.agencia_repasse,
-        "banco_repasse": dadosBanco.banco_repasse,
-        "cnpj": limpaMascaras.limpaMascaraCNPJ(empresa.recordset[0].EMPR_CGC),
-        "ddd": "19",
-        "telefone": limpaMascaras.limpaMascaraTelefone(empresa.recordset[0].EMPR_FONE),
-        "email": empresa.recordset[0].EMPR_EMAIL,
-        "endereco": empresa.recordset[0].EMPR_END,
-        "bairro": empresa.recordset[0].EMPR_BAIRRO,
-        "cidade": empresa.recordset[0].EMPR_CIDADE,
-        "estado": empresa.recordset[0].EMPR_UNFE_SIGLA,
-        "cep": limpaMascaras.limpaMascaraCEP(empresa.recordset[0].EMPR_CEP),
-        "agencia": dadosBanco.agencia
-    };
-
-    console.log(dadosEmpresa);
-
-    let credencial_obj = {};
+    const conta_cod = req.query.repasse_cod;
 
     (async () => {
+
+        const empresa = await querys.getDadosEmpresa(empresa_cod);
+    
+        const conta = await querys.getDadosConta(conta_cod);
+    
+        if (empresa.rowsAffected <= 0) {
+            console.log('erro empresa')
+            //res.json({erro:'Não foi encontrado os dados da empresa!'});
+            throw next(new Error('Não foi encontrado os dados da empresa!'));
+        }
+    
+        if (conta.rowsAffected <= 0) {
+            console.log('erro conta')
+            throw next(new Error('Não foi encontrado os dados dessa conta!'));
+        }
+    
+        let dadosBanco = {
+    
+            "conta_repasse": conta.conta_repasse,
+            "agencia_repasse": conta.agencia_repasse,
+            "banco_repasse": conta.banco_repasse,
+            "agencia": conta.agencia_pjbank || "0000"
+    
+        };
+    
+        console.log(dadosBanco);
+    
+        let ddd = empresa.recordset[0].EMPR_FONE.substring(2);
+    
+        let dadosEmpresa = {
+            "nome_empresa": empresa.recordset[0].EMPR_NOME,
+            "conta_repasse": dadosBanco.conta_repasse,
+            "agencia_repasse": dadosBanco.agencia_repasse,
+            "banco_repasse": dadosBanco.banco_repasse,
+            "cnpj": limpaMascaras.limpaMascaraCNPJ(empresa.recordset[0].EMPR_CGC),
+            "ddd": ddd || "19",
+            "telefone": limpaMascaras.limpaMascaraTelefone(empresa.recordset[0].EMPR_FONE),
+            "email": empresa.recordset[0].EMPR_EMAIL,
+            "endereco": empresa.recordset[0].EMPR_END,
+            "bairro": empresa.recordset[0].EMPR_BAIRRO,
+            "cidade": empresa.recordset[0].EMPR_CIDADE,
+            "estado": empresa.recordset[0].EMPR_UNFE_SIGLA,
+            "cep": limpaMascaras.limpaMascaraCEP(empresa.recordset[0].EMPR_CEP),
+            "agencia": dadosBanco.agencia
+        };
+    
+        console.log(dadosEmpresa);
+    
+        let credencial_obj = {};
+    
+        console.log(conta)
 
         if (!dadosEmpresa) {
            res.json({erro: 'Não foi passado os dados da empresa!'});
            //throw next(new Error('Não foi passado os dados da empresa!'));
         }
 
-        conta.criarCredencialContaRecebimento(dadosEmpresa)
-        .then(async function (response) {
+        if(!conta.recordset[0].CORE_CPEM_COD){
 
-            console.log(JSON.stringify(response.data));
+            conta.criarCredencialContaRecebimento(dadosEmpresa)
+            .then(async function (response) {
 
-            credencial_obj.empresa_cod = empresa_cod;
-            credencial_obj.credencial = response.data.credencial;
-            credencial_obj.chave = response.data.chave;
-            credencial_obj.chave_webhook = response.data.chave_webhook;
-            credencial_obj.conta_virtual = response.data.conta_virtual;
-            credencial_obj.agencia_virtual = response.data.agencia_virtual;
+                console.log(JSON.stringify(response.data));
 
-            let result = await querys.salvaCredenciaisEmpresaCredencial(credencial_obj);
+                credencial_obj.empresa_cod = empresa_cod;
+                credencial_obj.credencial = response.data.credencial;
+                credencial_obj.chave = response.data.chave;
+                credencial_obj.chave_webhook = response.data.chave_webhook;
+                credencial_obj.conta_virtual = response.data.conta_virtual;
+                credencial_obj.agencia_virtual = response.data.agencia_virtual;
 
-            res.json(response.data);
-        })
-        .catch(function (error) {
+                let result = await querys.salvaCredenciaisEmpresaCredencial(credencial_obj);
+                let ultimo_id = await querys.ultimoIdInserido();
+                let result_conta_repasse = await querys.updateCredencialContaRepasse(conta_cod, ultimo_id);
 
-            console.log(error.response.data.msg);
-            res.json(error.response.data);
-        });
+                res.json(response.data);
+            })
+            .catch(function (error) {
+
+                console.log(error.response.data.msg);
+                res.json(error.response.data);
+            });
+
+        }else{
+
+            console.log('Já existe credencial para esta conta!')
+            throw next(new Error('Já existe credencial para esta conta!'));
+
+        }
+
+        
 
     })()
     .then(resp => console.log(resp))

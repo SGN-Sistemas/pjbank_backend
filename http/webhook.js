@@ -1,4 +1,5 @@
 var axios = require('axios');
+
 require('dotenv/config');
 
 function criarEditarWebHook(credencial, chave, url){
@@ -10,7 +11,7 @@ function criarEditarWebHook(credencial, chave, url){
     var config = {
       method: 'put',
       maxBodyLength: Infinity,
-      url: `${process.env.PRE_URL_PJBANK}/contadigital/${credencial}`,
+      url: `https://sandbox.pjbank.com.br/contadigital/${credencial}`,
       headers: { 
         'X-CHAVE-CONTA': `${chave}`, 
         'Content-Type': 'application/json'

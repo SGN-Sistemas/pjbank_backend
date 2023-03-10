@@ -22,6 +22,10 @@ router.put('/webhook/config', (req, res, next) => {
     let empresa_cod = req.query.empresa;
     let url = req.body.url;
 
+    console.log('empresa: '+ empresa_cod);
+
+    console.log('url: ' + url);
+
     (async () => {
 
           await sql.connect(config_conexao.sqlConfig);

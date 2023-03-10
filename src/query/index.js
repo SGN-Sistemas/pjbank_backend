@@ -347,9 +347,9 @@ const salvaCredenciaisEmpresa = async (dados) => {
                                                   VALUES
                                                   (
                                                     ${dados.empresa_cod},
-                                                    ${dados.credencial},
-                                                    ${dados.chave},
-                                                    ${dados.webhook_chave}
+                                                    '${dados.credencial}',
+                                                    '${dados.chave}',
+                                                    '${dados.webhook_chave}'
                                                   )`;
     return result;
 
@@ -379,12 +379,101 @@ const salvaCredenciaisEmpresaCredencial = async (dados) => {
                                                   VALUES
                                                   (
                                                     ${dados.empresa_cod},
-                                                    ${dados.credencial},
-                                                    ${dados.chave},
-                                                    ${dados.webhook_chave},
-                                                    ${dados.conta_virtual},
-                                                    ${dados.agencia_virtual}
+                                                    '${dados.credencial}',
+                                                    '${dados.chave}',
+                                                    '${dados.webhook_chave}',
+                                                    '${dados.conta_virtual}',
+                                                    '${dados.agencia_virtual}'
                                                   )`;
+    return result;
+
+  } catch (err) {
+    console.log(err);
+    return err;
+  }
+
+}
+
+const updateCredencialContaRepasse = async (conta_repasse_cod, credencial_cod) => {
+
+  try{
+
+      await sql.connect(configBanco.sqlConfig);
+
+      const result = await sql.query`UPDATE 
+                                            CONTA_REPASSE
+                                     SET
+                                            CORE_CPEM_COD = ${credencial_cod}
+                                     WHERE 
+                                            CORE_COD = ${conta_repasse_cod}`;
+
+      return result;
+
+  }catch(err) {
+
+      console.log(err);
+      return err;
+  }
+
+}
+
+const ultimoIdInserido = async () => {
+
+  try{
+
+    await sql.connect(configBanco.sqlConfig);
+
+    const result = await sql.query`SELECT @@IDENTITY`;
+
+    return result;
+
+  }catch(err) {
+
+      console.log(err);
+      return err;
+  }
+  
+}
+
+const getDadosConta = async (conta_cod) => {
+
+  try {
+
+    
+    await sql.connect(configBanco.sqlConfig);
+
+    const result = await sql.query`SELECT 
+                                        CORE_CONTA_REPASSE,
+                                        CORE_AGENCIA_REPASSE,
+                                        CORE_BANCO_REPASSE,
+                                        CORE_EMPR_COD,
+                                        CORE_CPEM_COD
+                                    FROM 
+                                        CONTA_REPASSE
+                                    WHERE
+                                        CORE_COD = ${conta_cod}`;
+    return result;
+
+  } catch (err) {
+    console.log(err);
+    return err;
+  }
+
+}
+
+const getAgenciaPjbank = async (credencial) => {
+
+  try {
+
+    
+    await sql.connect(configBanco.sqlConfig);
+
+    const result = await sql.query`SELECT 
+                                        CPEM_AGENCIA_PJBANK
+                                    FROM 
+                                        CREDENCIAL_PJBANK_EMPRESA
+                                    WHERE
+                                        CPEM_CREDENCIAL = '${credencial}'`;
     return result;
 
   } catch (err) {
@@ -405,5 +494,9 @@ module.exports = {
    salvaCredenciaisEmpresa,
    salvaCredenciaisEmpresaCredencial,
    selectCredencialEmpresaSemContaDigital,
-   getDadosContatoCliente
+   getDadosContatoCliente,
+   getDadosConta,
+   getAgenciaPjbank,
+   updateCredencialContaRepasse,
+   ultimoIdInserido
 };

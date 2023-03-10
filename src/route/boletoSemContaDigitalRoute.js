@@ -631,6 +631,44 @@ router.get('/boleto_recebimento/consulta_boletos', (req, res, next) => {
 
 });
 
+router.get('/boleto_recebimento/consulta_boletos/identificador/', (req, res, next) => {
+
+      let empresa_cod = req.query.empresa;
+      let pedido_numero = req.query.identificador;
+
+      console.log('Exibiçção dos dados: ');
+      console.log(pedido_numero);
+
+      (async () => {
+
+            await sql.connect(config_conexao.sqlConfig);
+
+            const result_empresa = await querys.selectCredencialEmpresa(empresa_cod);
+
+            if(result_empresa.rowsAffected <= 0){
+                  res.json({erro: "Sem dados das credenciais dessa empresa!"});
+            }
+
+            let credencial = result_empresa.recordset[0].CPEM_CREDENCIAL;
+            let chave = result_empresa.recordset[0].CPEM_CHAVE;
+
+            operacoes_boletos.consultarBoletosRecebimentoSemContaDigital(credencial, chave, dados)
+            .then(async function (response) {
+
+                  console.log(response.data);
+                  res.json(response.data);
+            })
+            .catch(function (error) {
+                  console.log(error);
+                  res.json(error);
+            });
+
+       })()
+       .then(resp => console.log("caiu no then",resp))
+       .catch(err => console.log("caiu no erro",err));
+
+});
+
 router.post('/boleto_recebimento/split', (req, res, next) => {
 
       let split_dest = [
