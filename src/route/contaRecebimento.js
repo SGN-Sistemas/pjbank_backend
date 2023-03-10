@@ -56,7 +56,7 @@ router.post('/conta_recebimento', (req, res, next) => {
 
         const empresa = await querys.getDadosEmpresa(empresa_cod);
     
-        const conta = await querys.getDadosConta(conta_cod);
+        const conta_banco = await querys.getDadosConta(conta_cod);
     
         if (empresa.rowsAffected <= 0) {
             console.log('erro empresa')
@@ -64,17 +64,17 @@ router.post('/conta_recebimento', (req, res, next) => {
             throw next(new Error('Não foi encontrado os dados da empresa!'));
         }
     
-        if (conta.rowsAffected <= 0) {
+        if (conta_banco.rowsAffected <= 0) {
             console.log('erro conta')
             throw next(new Error('Não foi encontrado os dados dessa conta!'));
         }
     
         let dadosBanco = {
     
-            "conta_repasse": conta.conta_repasse,
-            "agencia_repasse": conta.agencia_repasse,
-            "banco_repasse": conta.banco_repasse,
-            "agencia": conta.agencia_pjbank || "0000"
+            "conta_repasse": conta_banco.conta_repasse,
+            "agencia_repasse": conta_banco.agencia_repasse,
+            "banco_repasse": conta_banco.banco_repasse,
+            "agencia": conta_banco.agencia_pjbank || "0000"
     
         };
     
@@ -103,14 +103,16 @@ router.post('/conta_recebimento', (req, res, next) => {
     
         let credencial_obj = {};
     
-        console.log(conta)
+        console.log(conta_banco)
 
         if (!dadosEmpresa) {
            res.json({erro: 'Não foi passado os dados da empresa!'});
            //throw next(new Error('Não foi passado os dados da empresa!'));
         }
 
-        if(!conta.recordset[0].CORE_CPEM_COD){
+        if(!conta_banco.recordset[0].CORE_CPEM_COD){
+
+            console.log(dadosEmpresa)
 
             conta.criarCredencialContaRecebimento(dadosEmpresa)
             .then(async function (response) {
@@ -131,6 +133,8 @@ router.post('/conta_recebimento', (req, res, next) => {
                 res.json(response.data);
             })
             .catch(function (error) {
+
+                console.log('Passou aqui')
 
                 console.log(error.response.data.msg);
                 res.json(error.response.data);
