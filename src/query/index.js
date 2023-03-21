@@ -28,7 +28,7 @@ const selectCredencialEmpresa = async (empresa) => {
   }
 }
 
-const selectCredencialEmpresaSemContaDigital = async (empresa) => {
+const selectCredencialEmpresaSemContaDigital = async (empresa, cobr_cod) => {
 
   try {
 
@@ -45,7 +45,11 @@ const selectCredencialEmpresaSemContaDigital = async (empresa) => {
                                         WHERE
                                                 CPEM_EMPR_COD = ${empresa}
                                         AND
-                                                CPEM_CONTA_VIRTUAL IS NOT NULL OR CPEM_CONTA_VIRTUAL <> ''`;
+                                                CPEM_COBR_COD = ${cobr_cod}
+                                        `;
+                                        
+                                        // AND
+                                        //         (CPEM_CONTA_VIRTUAL IS NOT NULL OR CPEM_CONTA_VIRTUAL <> '')
     return result;
 
   } catch (err) {
@@ -373,8 +377,8 @@ const salvaCredenciaisEmpresaCredencial = async (dados) => {
                                                     CPEM_CHAVE,
                                                     CPEM_WEBHOOK_CHAVE,
                                                     CPEM_CONTA_VIRTUAL,
-                                                    CPEM_AGENCIA_VIRTUAL
-
+                                                    CPEM_AGENCIA_VIRTUAL,
+                                                    CPEM_COBR_COD
                                                   )
                                                   VALUES
                                                   (
@@ -383,7 +387,8 @@ const salvaCredenciaisEmpresaCredencial = async (dados) => {
                                                     '${dados.chave}',
                                                     '${dados.webhook_chave}',
                                                     '${dados.conta_virtual}',
-                                                    '${dados.agencia_virtual}'
+                                                    '${dados.agencia_virtual}',
+                                                    ${dados.cobr_cod}
                                                   )`;
     return result;
 
@@ -423,7 +428,7 @@ const ultimoIdInserido = async () => {
 
     await sql.connect(configBanco.sqlConfig);
 
-    const result = await sql.query`SELECT @@IDENTITY`;
+    const result = await sql.query`SELECT @@IDENTITY AS LAST_CREDENCIAL_ID`;
 
     return result;
 
@@ -435,23 +440,82 @@ const ultimoIdInserido = async () => {
   
 }
 
-const getDadosConta = async (conta_cod) => {
+const getDadosConta = async (cobr_cod) => {
 
   try {
-
     
     await sql.connect(configBanco.sqlConfig);
 
     const result = await sql.query`SELECT 
-                                        CORE_CONTA_REPASSE,
-                                        CORE_AGENCIA_REPASSE,
-                                        CORE_BANCO_REPASSE,
-                                        CORE_EMPR_COD,
-                                        CORE_CPEM_COD
+                                        CC.COCO_NUM as conta_repasse,
+                                        CO.COBR_BACO_COD as banco_repasse,
+                                        A.AGEN_NUM as agencia_repasse
+                                   FROM 
+                                        COBRANCA CO
+                                   INNER JOIN
+                                        SUB_CONTA_CORRENTE SCC
+                                   ON
+                                        CO.COBR_SUCC_COD = SCC.SUCC_COD
+                                   INNER JOIN
+                                        CONTA_CORRENTE CC
+                                   ON
+                                        CC.COCO_COD = SCC.SUCC_COCO_COD
+                                   INNER JOIN
+                                        AGENCIA A
+                                   ON 
+                                        AGEN_COD = CC.COCO_AGEN_COD
+                                   WHERE
+                                        COBR_COD = ${cobr_cod}`;
+    return result;
+
+  } catch (err) {
+    console.log(err);
+    return err;
+  }
+
+}
+
+const getDadosContaSplit = async (trpr_cod) => {
+
+  try {
+    
+    await sql.connect(configBanco.sqlConfig);
+
+    console.log("trpe_cod do where: ");
+    console.log(trpr_cod);
+
+    const result = await sql.query`SELECT 
+                                        CO.COBR_CONTA_COBRANCA as conta_repasse,
+                                        CO.COBR_BACO_COD as banco_repasse,
+                                        A.AGEN_NUM as agencia_repasse,
+                                        RPC.REPC_NOME as nome,
+                                        RPC.REPC_CNPJ as cnpj,
+                                        RPC.REPC_VALOR_FIXO as valor_fixo,
+                                        RPC.REPC_PORCENTAGEM_ENCARGOS as percent_encargos
                                     FROM 
-                                        CONTA_REPASSE
+                                      REL_PARCELA_COBRANCA RPC
+                                    INNER JOIN
+                                      TR_PARCELA_RC TPR
+                                    ON
+                                      RPC.REPC_TRPR_COD = TPR.TRPR_COD
+                                    INNER JOIN
+                                      COBRANCA CO
+                                    ON 
+                                      RPC.REPC_COBR_COD = CO.COBR_COD
+                                    INNER JOIN
+                                      SUB_CONTA_CORRENTE SCC
+                                    ON
+                                      CO.COBR_SUCC_COD = SCC.SUCC_COD
+                                    INNER JOIN
+                                        CONTA_CORRENTE CC
+                                    ON
+                                        CC.COCO_COD = SCC.SUCC_COCO_COD
+                                    INNER JOIN
+                                        AGENCIA A
+                                    ON 
+                                        AGEN_COD = CC.COCO_AGEN_COD
                                     WHERE
-                                        CORE_COD = ${conta_cod}`;
+                                        RPC.REPC_TRPR_COD = ${trpr_cod}`;
     return result;
 
   } catch (err) {
@@ -465,7 +529,6 @@ const getAgenciaPjbank = async (credencial) => {
 
   try {
 
-    
     await sql.connect(configBanco.sqlConfig);
 
     const result = await sql.query`SELECT 
@@ -474,6 +537,28 @@ const getAgenciaPjbank = async (credencial) => {
                                         CREDENCIAL_PJBANK_EMPRESA
                                     WHERE
                                         CPEM_CREDENCIAL = '${credencial}'`;
+    return result;
+
+  } catch (err) {
+    console.log(err);
+    return err;
+  }
+
+}
+
+const getCaminhoArquivoCobranca = async (cobr_cod) => {
+
+  try {
+
+    
+    await sql.connect(configBanco.sqlConfig);
+
+    const result = await sql.query`SELECT 
+                                        COBR_DIR_GERACAO
+                                    FROM 
+                                        COBRANCA
+                                    WHERE
+                                        COBR_COD = '${cobr_cod}'`;
     return result;
 
   } catch (err) {
@@ -498,5 +583,7 @@ module.exports = {
    getDadosConta,
    getAgenciaPjbank,
    updateCredencialContaRepasse,
-   ultimoIdInserido
+   ultimoIdInserido,
+   getDadosContaSplit,
+   getCaminhoArquivoCobranca
 };

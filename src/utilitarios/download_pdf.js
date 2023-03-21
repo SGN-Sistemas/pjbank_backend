@@ -2,7 +2,7 @@ const { DownloaderHelper } = require('node-downloader-helper');
 
 const downloadPdf = (url, caminho, filename) => {
 
-    let nome_arquivo = filename ? filename : "Sem titulo.pdf";
+    let nome_arquivo = filename ? (filename + ".pdf") : "Sem titulo.pdf";
 
     console.log(nome_arquivo);
 

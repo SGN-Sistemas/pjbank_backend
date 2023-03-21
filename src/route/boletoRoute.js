@@ -30,6 +30,27 @@ router.post('/boleto', (req, res, next) => {
 
       let codigos = req.body.parcelas;
       let email_req = req.body.email;
+      let tr = req.body.tr;
+      let nome_arq = req.body.nome_arq;
+
+      console.log('nomeArq');
+
+      console.log(nome_arq);
+
+      console.log('codigos')
+
+      console.log(codigos)
+
+      let tr_codigos = tr == 1 ? codigos : '';
+
+      let nome_arquivo = nome_arq != 0 ? nome_arq : '';
+
+      console.log('nome_arquivo');
+
+      console.log(nome_arquivo);
+
+      console.log('array de trs')
+      console.log(tr_codigos)
 
       // Boleto, pix ou Pix e Boleto
       let forma_pagamento = req.body.forma;
@@ -240,12 +261,23 @@ router.post('/boleto', (req, res, next) => {
 
                                           obj_result.erro = [];
 
-
                                           console.log('antes do pdf');
 
-                                          obj_result.boleto.forEach(async (ele) => {
+                                          obj_result.boleto.forEach(async (ele, index) => {
 
-                                                download_pdf.downloadPdf(ele.link, '/home/matheus/Matheus - Projetos PJbank/Backend-pjbank/pjbank_backend/downloads', '');
+                                                if(nome_arquivo){
+
+                                                      download_pdf.downloadPdf(ele.link, '/home/matheus/Matheus - Projetos PJbank/Backend-pjbank/pjbank_backend/downloads', nome_arquivo);
+
+                                                }else if(tr_codigos){
+
+                                                      download_pdf.downloadPdf(ele.link, '/home/matheus/Matheus - Projetos PJbank/Backend-pjbank/pjbank_backend/downloads', tr_codigos[index]);
+
+                                                }else{
+
+                                                      download_pdf.downloadPdf(ele.link, '/home/matheus/Matheus - Projetos PJbank/Backend-pjbank/pjbank_backend/downloads', '');
+
+                                                }
 
                                           });
 
@@ -435,10 +467,22 @@ router.post('/boleto', (req, res, next) => {
                                                                   let i = 1;
 
 
-                                                                  obj_result.boleto.forEach(async (ele) => {
+                                                                  obj_result.boleto.forEach(async (ele, index) => {
 
-                                                                        download_pdf.downloadPdf(ele.link, '/home/matheus/Matheus - Projetos PJbank/Backend-pjbank/pjbank_backend/downloads', '');
+                                                                        if(nome_arquivo){
 
+                                                                              download_pdf.downloadPdf(ele.link, '/home/matheus/Matheus - Projetos PJbank/Backend-pjbank/pjbank_backend/downloads', nome_arquivo);
+                        
+                                                                        }else if(tr_codigos){
+                        
+                                                                              download_pdf.downloadPdf(ele.link, '/home/matheus/Matheus - Projetos PJbank/Backend-pjbank/pjbank_backend/downloads', tr_codigos[index]);
+                        
+                                                                        }else{
+                        
+                                                                              download_pdf.downloadPdf(ele.link, '/home/matheus/Matheus - Projetos PJbank/Backend-pjbank/pjbank_backend/downloads', '');
+                        
+                                                                        }
+                        
                                                                   });
 
                                                                   res.json(obj_result);

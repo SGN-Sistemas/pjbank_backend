@@ -4,6 +4,7 @@ const nodemailer = require('nodemailer');
 const sql = require('mssql');
 require('dotenv/config');
 const download = require('../utils/dowload');
+const CircularJSON = require('circular-json');
 
 const datas = require('../../src/datas_formatadas');
 const smtp = require('../../src/smtp/config_smtp');
@@ -17,6 +18,7 @@ const { json } = require('body-parser');
 // cd route
 
 const { route } = require('./contaRecebimento');
+const { query } = require('express');
 
 const router = express.Router();
 
@@ -31,9 +33,29 @@ router.post('/boleto_recebimento', (req, res, next) => {
 
       let codigos = req.body.parcelas;
       let email_req = req.body.email;
+      let tr = req.body.tr;
+      let nome_arquivo = req.body.nome_arq;
+      let cobr_cod = req.body.cobr_cod;
+
+      console.log('nomeArq');
+
+      console.log(nome_arquivo);
+
+      console.log('codigos')
+
+      console.log(codigos)
+
+      console.log('cobr_cod')
+
+      console.log(cobr_cod)
+
+      let tr_codigos = tr == 1 ? codigos : '';
+
+      console.log('array de trs')
+      console.log(tr_codigos)
 
       // Boleto, pix ou Pix e Boleto
-      let forma_pagamento = req.body.forma;
+      let forma_pagamento = 'pix-e-boleto';
 
       console.log(codigos);
       console.log(email_req);
@@ -64,7 +86,7 @@ router.post('/boleto_recebimento', (req, res, next) => {
                               console.log(cliente_cod);
                               console.log(empresa_cod);
 
-                              const result_empresa = await querys.selectCredencialEmpresa(empresa_cod);
+                              const result_empresa = await querys.selectCredencialEmpresaSemContaDigital(empresa_cod, cobr_cod);
                               console.log(result_empresa.recordset[0].CPEM_CREDENCIAL);
                               let credencial = result_empresa.recordset[0].CPEM_CREDENCIAL;
                               let url_webhook = result_empresa.recordset[0].CPEM_URL_WEBHOOK;
@@ -148,8 +170,12 @@ router.post('/boleto_recebimento', (req, res, next) => {
                                     throw next(new Error("Existem parcelas que já foram emitidas!"));
                               }
 
-                              var data = JSON.stringify({
-                                    "cobrancas": [...array_parcelas]
+                              // var data = JSON.stringify({
+                              //       "cobrancas": [...array_parcelas]
+                              // })
+
+                              var data = CircularJSON.stringify({
+                                     "cobrancas": [...array_parcelas]
                               });
 
                               console.log(data);
@@ -240,9 +266,24 @@ router.post('/boleto_recebimento', (req, res, next) => {
 
                                           obj_result.erro = [];
 
-                                          obj_result.boleto.forEach(async (ele) => {
+                                          obj_result.boleto.forEach(async (ele, index) => {
 
-                                                download_pdf.downloadPdf(ele.link, '/home/matheus/Matheus - Projetos PJbank/Backend-pjbank/pjbank_backend/downloads', '');
+                                                // /home/matheus/Matheus - Projetos PJbank/Backend-pjbank/pjbank_backend/downloads
+                                                // /www/downloads
+
+                                                if(nome_arquivo){
+
+                                                      download_pdf.downloadPdf(ele.link, '/www/downloads', nome_arquivo);
+
+                                                }else if(tr_codigos){
+
+                                                      download_pdf.downloadPdf(ele.link, '/www/downloads', tr_codigos[index]);
+
+                                                }else{
+
+                                                      download_pdf.downloadPdf(ele.link, '/www/downloads', '');
+
+                                                }
 
                                           });
 
@@ -262,7 +303,7 @@ router.post('/boleto_recebimento', (req, res, next) => {
                               let cliente_cod = dados_cobranca.recordset[0].CLIE_TIPO_COD;
                               let empresa_cod = dados_cobranca.recordset[0].TRRC_EMPR_COD;
 
-                              const result_empresa = await querys.selectCredencialEmpresa(empresa_cod);
+                              const result_empresa = await querys.selectCredencialEmpresaSemContaDigital(empresa_cod, cobr_cod);
                               console.log(result_empresa.recordset[0].CPEM_CREDENCIAL);
                               let credencial = result_empresa.recordset[0].CPEM_CREDENCIAL;
                               let url_webhook = result_empresa.recordset[0].CPEM_URL_WEBHOOK;
@@ -355,7 +396,7 @@ router.post('/boleto_recebimento', (req, res, next) => {
 
                                           if (exists_boletos.rowsAffected[0] <= 0) {
 
-                                                var data = JSON.stringify({
+                                                var data = CircularJSON.stringify({
                                                       "cobrancas": response
                                                 });
 
@@ -431,9 +472,21 @@ router.post('/boleto_recebimento', (req, res, next) => {
                                                                   let i = 1;
 
 
-                                                                  obj_result.boleto.forEach(async (ele) => {
+                                                                  obj_result.boleto.forEach(async (ele, index) => {
 
-                                                                        download_pdf.downloadPdf(ele.link, '/home/matheus/Matheus - Projetos PJbank/Backend-pjbank/pjbank_backend/downloads', '');
+                                                                        if(nome_arquivo){
+
+                                                                              download_pdf.downloadPdf(ele.link, '/www/downloads', nome_arquivo);
+                        
+                                                                        }else if(tr_codigos){
+                        
+                                                                              download_pdf.downloadPdf(ele.link, '/www/downloads', tr_codigos[index]);
+                        
+                                                                        }else{
+                        
+                                                                              download_pdf.downloadPdf(ele.link, '/www/downloads', '');
+                        
+                                                                        }
 
                                                                   });
 
@@ -471,6 +524,7 @@ router.post('/boleto_recebimento/carne', (req, res, next) => {
 
       let pedido_numero = req.query.pedido.split('-');
       let empresa_cod = req.query.empresa;
+      let cobr_cod    = req.query.cobr_cod;
 
       //console.log('teste')
 
@@ -478,7 +532,7 @@ router.post('/boleto_recebimento/carne', (req, res, next) => {
 
             await sql.connect(config_conexao.sqlConfig);
 
-            const result_empresa = await querys.selectCredencialEmpresa(empresa_cod);
+            const result_empresa = await querys.selectCredencialEmpresaSemContaDigital(empresa_cod, cobr_cod);
 
             if(result_empresa.rowsAffected <= 0){
                   //res.json({erro: "Sem dados das credenciais dessa empresa!"});
@@ -520,12 +574,13 @@ router.post('/boleto_recebimento/lote', (req, res, next) => {
 
     let pedido_numero = req.query.pedido.split('-');
     let empresa_cod = req.query.empresa;
+    let cobr_cod    = req.query.cobr_cod;
 
     (async () => {
 
           await sql.connect(config_conexao.sqlConfig);
 
-          const result_empresa = await querys.selectCredencialEmpresa(empresa_cod);
+          const result_empresa = await querys.selectCredencialEmpresa(empresa_cod, cobr_cod);
 
           if(result_empresa.rowsAffected <= 0){
             res.json({"erro":"Sem dados das credenciais dessa empresa!"});
@@ -563,12 +618,13 @@ router.delete('/boleto_recebimento', (req, res, next) => {
 
     let pedido_numero = req.query.pedido;
     let empresa_cod = req.query.empresa;
+    let cobr_cod    = req.query.cobr_cod;
 
     (async () => {
 
           await sql.connect(config_conexao.sqlConfig);
 
-          const result_empresa = await querys.selectCredencialEmpresa(empresa_cod);
+          const result_empresa = await querys.selectCredencialEmpresaSemContaDigital(empresa_cod, cobr_cod);
 
           if(result_empresa.rowsAffected <= 0){
                 res.json({erro: "Sem dados das credenciais dessa empresa!"});
@@ -596,7 +652,9 @@ router.delete('/boleto_recebimento', (req, res, next) => {
 router.get('/boleto_recebimento/consulta_boletos', (req, res, next) => {
 
       let empresa_cod = req.query.empresa;
+      let cobr_cod = req.body.cobr_cod;
       let dados = req.body;
+      
 
       console.log('Exibiçção dos dados: ');
       console.log(dados);
@@ -605,7 +663,7 @@ router.get('/boleto_recebimento/consulta_boletos', (req, res, next) => {
 
             await sql.connect(config_conexao.sqlConfig);
 
-            const result_empresa = await querys.selectCredencialEmpresa(empresa_cod);
+            const result_empresa = await querys.selectCredencialEmpresaSemContaDigital(empresa_cod, cobr_cod);
 
             if(result_empresa.rowsAffected <= 0){
                   res.json({erro: "Sem dados das credenciais dessa empresa!"});
@@ -635,6 +693,7 @@ router.get('/boleto_recebimento/consulta_boletos/identificador/', (req, res, nex
 
       let empresa_cod = req.query.empresa;
       let pedido_numero = req.query.identificador;
+      let cobr_cod = req.query.cobr_cod;
 
       console.log('Exibiçção dos dados: ');
       console.log(pedido_numero);
@@ -665,16 +724,18 @@ router.get('/boleto_recebimento/consulta_boletos/identificador/', (req, res, nex
 
        })()
        .then(resp => console.log("caiu no then",resp))
-       .catch(err => console.log("caiu no erro",err));
-
+       .catch(err => console.log("caiu no erro",err));array_par
+       dados_split
 });
 
 router.post('/boleto_recebimento/split', (req, res, next) => {
 
+      // ----------------------------------------------------------------------------------------
+
       let split_dest = [
             {
                   "nome": "Fornecedor 1",
-                  "cnpj": "10488175000143",
+                  "cnpj": "45510143000181",
                   "banco_repasse": "003",
                   "agencia_repasse": "0001",
                   "conta_repasse": "99999-9",
@@ -683,7 +744,7 @@ router.post('/boleto_recebimento/split', (req, res, next) => {
             },
             {
                   "nome": "Fornecedor 2",
-                  "cnpj": "25377167000105",
+                  "cnpj": "72025834000162",
                   "banco_repasse": "003",
                   "agencia_repasse": "0002",
                   "conta_repasse": "99999-7",
@@ -692,9 +753,79 @@ router.post('/boleto_recebimento/split', (req, res, next) => {
             }
       ];
 
+      let array_split_dest = [];
+
+      console.log('teste');
+
       let codigos = req.body.parcelas;
       let email_req = req.body.email;
-      let split = req.body.split ?? split_dest;
+      let split = req.body.split;
+      let tr = req.body.tr;
+      let nome_arq = req.body.nome_arq;
+      let cobr_cod = req.body.cobr_cod;
+
+      // ----------------------------------------------------------------------------------------
+      // let split_dest = [];
+
+      // codigos.forEach(async parc => {
+
+      //       let dados_split = await querys.getDadosContaSplit(parc);
+
+      //       if(dados_split.rowsAffected > 0){
+
+      //                   dados_split.recordset.forEach(par => {
+
+      //                         let conta_obj = {
+
+      //                               nome: par.nome,
+      //                               cnpj: par.cnpj,
+      //                               banco_repasse: par.banco_repasse,
+      //                               agencia_repasse: par.agencia_repasse,
+      //                               conta_repasse: par.conta_repasse,
+      //                               valor_fixo: par.valor_fixo,
+      //                               porcentagem_encargos: par.percent_encargos
+                              
+      //                         }
+      
+      //                         console.log('dados do split');
+      
+      //                         console.log(conta_obj);
+      
+      //                         split_dest.push(conta_obj);
+      
+      //                         console.log(split_dest);
+ 
+      //                   });
+
+      //                   array_split_dest.push(split_dest);
+
+      //       } 
+      // })   
+
+      console.log('Dados split - Aqui');
+
+      console.log('--------------------------------------------------------------');
+
+      console.log(split_dest);
+
+      console.log('--------------------------------------------------------------');
+
+      console.log('nomeArq');
+
+      console.log(nome_arq);
+
+      console.log('codigos');
+
+      console.log(codigos);
+
+      console.log('cobr_cod');
+
+      console.log(cobr_cod);
+
+      let tr_codigos = tr == 1 ? codigos : '';
+
+      console.log('array de trs');
+      console.log(tr_codigos);
 
       // Boleto, pix ou Pix e Boleto
       let forma_pagamento = req.body.forma;
@@ -728,7 +859,7 @@ router.post('/boleto_recebimento/split', (req, res, next) => {
                               console.log(cliente_cod);
                               console.log(empresa_cod);
 
-                              const result_empresa = await querys.selectCredencialEmpresa(empresa_cod);
+                              const result_empresa = await querys.selectCredencialEmpresaSemContaDigital(empresa_cod, cobr_cod);
                               console.log(result_empresa.recordset[0].CPEM_CREDENCIAL);
                               let credencial = result_empresa.recordset[0].CPEM_CREDENCIAL;
                               let url_webhook = result_empresa.recordset[0].CPEM_URL_WEBHOOK;
@@ -798,27 +929,40 @@ router.post('/boleto_recebimento/split', (req, res, next) => {
 
                                     }
 
-
                                     console.log(obj);
 
                                     return obj;
                               });
 
+                              console.log('Array parcelas');
+
+                              console.log('--------------------------------------------------------------');
+
+                              console.log(array_parcelas);
+
+                              // let par = array_parcelas.map(ele => {
+                              //       console.log(ele);
+                              //       return ele;
+                              // })
+
+                              console.log('--------------------------------------------------------------');
+
                               console.log("Depois do map");
 
-                              if(exists_boletos.rowsAffected[0] > 0){
+                              if(exists_boletos.rowsAffected > 0){
                                     //res.json({erro: "Existem parcelas que já foram emitidas!"});
                                     throw next(new Error("Existem parcelas que já foram emitidas!"));
                               }
 
-                              var data = JSON.stringify({
+                              var data = CircularJSON.stringify({
                                     "cobrancas": [...array_parcelas]
                               });
 
-                              console.log(data);
+                              // var data = CircularJSON.stringify(array_parcelas[0]);
 
                               var config = {
                                     method: 'post',
+                                    maxBodyLength: Infinity,
                                     url: `${process.env.PRE_URL_PJBANK}/recebimentos/${credencial}/transacoes`,
                                     headers: {
                                           'Content-Type': 'application/json'
@@ -830,8 +974,10 @@ router.post('/boleto_recebimento/split', (req, res, next) => {
 
                               console.log(config);
 
+                              console.log('pre requisicao')
+
                               axios(config)
-                                    .then(async function (response) {
+                                    .then(function (response) {
 
                                         console.log(response);
 
@@ -903,9 +1049,28 @@ router.post('/boleto_recebimento/split', (req, res, next) => {
 
                                           obj_result.erro = [];
 
-                                          obj_result.boleto.forEach(async (ele) => {
+                                          // let caminho_arquivo = await query.getCaminhoArquivoCobranca(cobr_cod);
+                                          // caminho_arquivo = ( caminho_arquivo.rowsAffected ) > 0 ? caminho_arquivo.recordset[0].COBR_DIR_GERACAO : '/www/downloads';
 
-                                                download_pdf.downloadPdf(ele.link, '/home/matheus/Matheus - Projetos PJbank/Backend-pjbank/pjbank_backend/downloads', '');
+                                          console.log('Caminho arquivo');
+                                          console.log(caminho_arquivo);
+
+                                          let caminho_arquivo = '/www/downloads';
+
+                                          obj_result.boleto.forEach(async (ele, index) => {
+
+                                                if(nome_arq){
+
+                                                      download_pdf.downloadPdf(ele.link, caminho_arquivo, nome_arq);
+
+                                                }else if(tr_codigos){
+
+                                                      download_pdf.downloadPdf(ele.link, caminho_arquivo, tr_codigos[index]);
+
+                                                }else{
+                                                      download_pdf.downloadPdf(ele.link, caminho_arquivo, '');
+
+                                                }
 
                                           });
 
@@ -914,8 +1079,8 @@ router.post('/boleto_recebimento/split', (req, res, next) => {
                                     })
                                     .catch(function (error) {
                                           console.log('entrou no catch');
-                                          res.json(error.response.data);
-                                          console.log(error.response.data);
+                                          res.json(error.response);
+                                          console.log(error.response);
                                     });
 
                         } else {
@@ -925,7 +1090,7 @@ router.post('/boleto_recebimento/split', (req, res, next) => {
                               let cliente_cod = dados_cobranca.recordset[0].CLIE_TIPO_COD;
                               let empresa_cod = dados_cobranca.recordset[0].TRRC_EMPR_COD;
 
-                              const result_empresa = await querys.selectCredencialEmpresa(empresa_cod);
+                              const result_empresa = await querys.selectCredencialEmpresaSemContaDigital(empresa_cod, cobr_cod);
                               console.log(result_empresa.recordset[0].CPEM_CREDENCIAL);
                               let credencial = result_empresa.recordset[0].CPEM_CREDENCIAL;
                               let url_webhook = result_empresa.recordset[0].CPEM_URL_WEBHOOK;
@@ -1014,9 +1179,9 @@ router.post('/boleto_recebimento/split', (req, res, next) => {
 
                                           console.log(response)
 
-                                          if (exists_boletos.rowsAffected[0] <= 0) {
+                                          if (exists_boletos.rowsAffected <= 0) {
 
-                                                var data = JSON.stringify({
+                                                var data = CircularJSON.stringify({
                                                       "cobrancas": response
                                                 });
 
@@ -1036,7 +1201,7 @@ router.post('/boleto_recebimento/split', (req, res, next) => {
                                                             console.log('teste');
                                                             console.log(response.data);
 
-                                                            if (response.data) {
+                                                            if (response.data){
                                                                   dados = response.data;
 
                                                                   obj_result.mensagem = "Boletos gerados com sucesso";
@@ -1091,14 +1256,37 @@ router.post('/boleto_recebimento/split', (req, res, next) => {
 
                                                                   let i = 1;
 
+                                                                  //let caminho_arquivo = await query.getCaminhoArquivoCobranca(cobr_cod);
+
+                                                                  let caminho_arquivo = await query.getCaminhoArquivoCobranca(cobr_cod);
+                                                                  caminho_arquivo = caminho_arquivo.rowsAffected > 0 ? caminho_arquivo.recordset[0].COBR_DIR_GERACAO : '/www/downloads';
+
+                                                                  //let caminho_arquivo = '/www/downloads';
+
+                                                                  console.log('Caminho arquivo');
+
+                                                                  console.log(caminho_arquivo);
 
                                                                   obj_result.boleto.forEach(async (ele) => {
 
-                                                                        download_pdf.downloadPdf(ele.link, '/home/matheus/Matheus - Projetos PJbank/Backend-pjbank/pjbank_backend/downloads', '');
+                                                                        if(nome_arq){
+
+                                                                              download_pdf.downloadPdf(ele.link, caminho_arquivo, nome_arq);
+                        
+                                                                        }else if(tr_codigos){
+                        
+                                                                              download_pdf.downloadPdf(ele.link, caminho_arquivo, tr_codigos[index]);
+                        
+                                                                        }else{
+                        
+                                                                              download_pdf.downloadPdf(ele.link, caminho_arquivo, '');
+                        
+                                                                        }
 
                                                                   });
 
                                                                   res.json(obj_result);
+
                                                             } else {
                                                                   //res.json({erro: "Problema na requisição!"});
                                                                   throw next(new Error("Problema na requisição!"));
@@ -1132,6 +1320,28 @@ router.put('/boleto_recebimento', (req, res, next) => {
 
       let codigos = req.body.parcelas;
       let email_req = req.body.email;
+      let tr = req.body.tr;
+      let nome_arq = req.body.nome_arq;
+      let cobr_cod = req.body.cobr_cod;
+
+      console.log('nomeArq');
+
+      console.log(nome_arq);
+
+      console.log('codigos')
+
+      console.log(codigos)
+
+      let tr_codigos = tr == 1 ? codigos : '';
+
+      let nome_arquivo = nome_arq ? nome_arq : '';
+
+      console.log('nome_arquivo');
+
+      console.log(nome_arquivo);
+
+      console.log('array de trs')
+      console.log(tr_codigos)
 
       // Boleto, pix ou Pix e Boleto
       let forma_pagamento = req.body.forma;
@@ -1165,7 +1375,7 @@ router.put('/boleto_recebimento', (req, res, next) => {
                               console.log(cliente_cod);
                               console.log(empresa_cod);
 
-                              const result_empresa = await querys.selectCredencialEmpresa(empresa_cod);
+                              const result_empresa = await querys.selectCredencialEmpresaSemContaDigital(empresa_cod, cobr_cod);
                               console.log(result_empresa.recordset[0].CPEM_CREDENCIAL);
                               let credencial = result_empresa.recordset[0].CPEM_CREDENCIAL;
                               let url_webhook = result_empresa.recordset[0].CPEM_URL_WEBHOOK;
@@ -1249,7 +1459,11 @@ router.put('/boleto_recebimento', (req, res, next) => {
                               //       throw next(new Error("Existem parcelas que já foram emitidas!"));
                               // }
 
-                              var data = JSON.stringify({
+                              // var data = JSON.stringify({
+                              //       "cobrancas": [...array_parcelas]
+                              // });
+
+                              var data = CircularJSON.stringify({
                                     "cobrancas": [...array_parcelas]
                               });
 
@@ -1343,7 +1557,19 @@ router.put('/boleto_recebimento', (req, res, next) => {
 
                                           obj_result.boleto.forEach(async (ele) => {
 
-                                                download_pdf.downloadPdf(ele.link, '/home/matheus/Matheus - Projetos PJbank/Backend-pjbank/pjbank_backend/downloads', '');
+                                                if(nome_arquivo){
+
+                                                      download_pdf.downloadPdf(ele.link, '/www/downloads', nome_arquivo);
+
+                                                }else if(tr_codigos){
+
+                                                      download_pdf.downloadPdf(ele.link, '/www/downloads', tr_codigos[index]);
+
+                                                }else{
+
+                                                      download_pdf.downloadPdf(ele.link, '/www/downloads', '');
+
+                                                }
 
                                           });
 
@@ -1363,7 +1589,7 @@ router.put('/boleto_recebimento', (req, res, next) => {
                               let cliente_cod = dados_cobranca.recordset[0].CLIE_TIPO_COD;
                               let empresa_cod = dados_cobranca.recordset[0].TRRC_EMPR_COD;
 
-                              const result_empresa = await querys.selectCredencialEmpresa(empresa_cod);
+                              const result_empresa = await querys.selectCredencialEmpresaSemContaDigital(empresa_cod, cobr_cod);
                               console.log(result_empresa.recordset[0].CPEM_CREDENCIAL);
                               let credencial = result_empresa.recordset[0].CPEM_CREDENCIAL;
                               let url_webhook = result_empresa.recordset[0].CPEM_URL_WEBHOOK;
@@ -1534,7 +1760,19 @@ router.put('/boleto_recebimento', (req, res, next) => {
 
                                                                   obj_result.boleto.forEach(async (ele) => {
 
-                                                                        download_pdf.downloadPdf(ele.link, '/home/matheus/Matheus - Projetos PJbank/Backend-pjbank/pjbank_backend/downloads', '');
+                                                                        if(nome_arquivo){
+
+                                                                              download_pdf.downloadPdf(ele.link, '/www/downloads', nome_arquivo);
+                        
+                                                                        }else if(tr_codigos){
+                        
+                                                                              download_pdf.downloadPdf(ele.link, '/www/downloads', tr_codigos[index]);
+                        
+                                                                        }else{
+                        
+                                                                              download_pdf.downloadPdf(ele.link, '/www/downloads', '');
+                        
+                                                                        }
 
                                                                   });
 

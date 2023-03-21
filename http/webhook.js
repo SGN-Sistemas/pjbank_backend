@@ -5,7 +5,7 @@ require('dotenv/config');
 function criarEditarWebHook(credencial, chave, url){
 
     var data = JSON.stringify({
-      "webhook": `${url}`
+      "webhook": ""+url+""
     });
 
     var config = {
